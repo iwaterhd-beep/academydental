@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Iniciar depuración (Chrome)",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}",
+      "preLaunchTask": "servidor web"
+    },
+    {
+      "type": "msedge",
+      "request": "launch",
+      "name": "Iniciar depuración (Edge)",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}",
+      "preLaunchTask": "servidor web"
+    }
+  ]
+}

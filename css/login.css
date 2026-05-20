@@ -1,0 +1,236 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --gold: #c9a96e;
+  --gold-light: #e8d5b0;
+  --gold-dim: #7a5f38;
+  --dark: #080808;
+  --dark-2: #111111;
+  --text-light: #f0ece4;
+  --text-muted: #666666;
+  --border-dark: rgba(255, 255, 255, 0.07);
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: "DM Sans", sans-serif;
+  --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+html { font-size: 16px; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--dark);
+  color: var(--text-light);
+  min-height: 100vh;
+}
+
+::selection { background: var(--gold); color: var(--dark); }
+
+.login-layout {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.login-visual {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 48px 64px;
+  background:
+    linear-gradient(to top, rgba(8, 8, 8, 0.92) 0%, rgba(8, 8, 8, 0.5) 50%, rgba(8, 8, 8, 0.75) 100%),
+    url("https://static.wixstatic.com/media/aca030_c3d4df8430f040f9a2e65c4b80077a66~mv2.jpg") center/cover;
+}
+
+.login-visual::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, var(--gold), transparent);
+}
+
+.login-logo {
+  position: relative;
+  z-index: 1;
+  text-decoration: none;
+}
+
+.login-logo-title {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--gold-light);
+  letter-spacing: 0.04em;
+}
+
+.login-logo-tag {
+  display: block;
+  margin-top: 4px;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.login-visual-copy {
+  position: relative;
+  z-index: 1;
+  max-width: 420px;
+}
+
+.login-kicker {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 24px;
+}
+
+.login-kicker::before {
+  content: "";
+  width: 40px;
+  height: 1px;
+  background: var(--gold);
+}
+
+.login-visual-copy h1 {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 4vw, 52px);
+  font-weight: 300;
+  line-height: 1.1;
+  margin-bottom: 20px;
+}
+
+.login-visual-copy h1 em {
+  font-style: italic;
+  color: var(--gold);
+}
+
+.login-visual-copy p {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--text-muted);
+}
+
+.login-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  background: var(--dark-2);
+  border-left: 1px solid var(--border-dark);
+}
+
+.login-panel-inner {
+  width: 100%;
+  max-width: 380px;
+}
+
+.login-panel .login-kicker {
+  margin-bottom: 12px;
+}
+
+.login-panel .login-kicker::before {
+  width: 32px;
+}
+
+.login-title {
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 300;
+  line-height: 1;
+  margin-bottom: 40px;
+}
+
+.login-field {
+  margin-bottom: 28px;
+}
+
+.login-label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.login-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 12px 0;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 300;
+  color: var(--text-light);
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.login-input::placeholder {
+  color: #444;
+}
+
+.login-input:focus {
+  border-bottom-color: var(--gold);
+}
+
+.login-btn {
+  width: 100%;
+  margin-top: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dark);
+  background: var(--gold);
+  border: none;
+  padding: 16px 24px;
+  border-radius: 1px;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.login-btn:hover {
+  background: var(--gold-light);
+  transform: translateY(-2px);
+}
+
+.login-status {
+  margin-top: 20px;
+  font-size: 13px;
+  color: var(--gold);
+  min-height: 20px;
+}
+
+.login-status.is-error {
+  color: #e05555;
+}
+
+@media (max-width: 820px) {
+  .login-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .login-visual {
+    min-height: 240px;
+    padding: 32px 24px;
+  }
+
+  .login-visual-copy {
+    display: none;
+  }
+
+  .login-panel {
+    border-left: none;
+    padding: 40px 24px 56px;
+  }
+}

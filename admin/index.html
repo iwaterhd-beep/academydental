@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Dashboard — Vallodental Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/login.css" />
+  <link rel="stylesheet" href="/admin/admin.css" />
+</head>
+<body class="admin-page">
+
+  <aside class="admin-sidebar">
+    <div>
+      <p class="login-kicker">Panel</p>
+      <h1 class="admin-brand">Vallodental<br><em>Academy</em></h1>
+      <p class="admin-tag">Administración</p>
+      <nav class="admin-nav">
+        <a href="/admin/" class="admin-nav-link" data-nav="dashboard">Dashboard</a>
+        <a href="/admin/cursos" class="admin-nav-link" data-nav="cursos">Cursos</a>
+        <a href="/admin/alumnos" class="admin-nav-link" data-nav="alumnos">Alumnos</a>
+        <a href="/admin/progreso" class="admin-nav-link" data-nav="progreso">Progreso</a>
+        <a href="/admin/correcciones" class="admin-nav-link" data-nav="correcciones">Correcciones</a>
+      </nav>
+    </div>
+    <div class="admin-footer">
+      <p class="admin-user">cursos@admin.com</p>
+      <button type="button" class="login-btn admin-logout" id="logoutBtn">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <header class="admin-header admin-header--row">
+      <div>
+        <p class="login-kicker">Resumen</p>
+        <h2 class="login-title admin-page-title">Dashboard</h2>
+      </div>
+      <a href="/admin/curso-editor?new=1" class="admin-btn admin-btn--gold">+ Nuevo curso</a>
+    </header>
+
+    <div class="admin-content">
+      <div class="admin-metrics" id="metrics"></div>
+
+      <div class="admin-grid-2">
+        <section class="admin-card admin-card--wide">
+          <div class="admin-card-head">
+            <h3 class="admin-card-title">Actividad reciente</h3>
+          </div>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Elemento</th>
+                  <th>Detalle</th>
+                  <th>Fecha</th>
+                </tr>
+              </thead>
+              <tbody id="activityBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="admin-card">
+          <p class="login-kicker">Accesos rápidos</p>
+          <h3 class="admin-card-title">Gestión</h3>
+          <div class="admin-quick-links">
+            <a href="/admin/cursos" class="admin-quick-link">Gestionar cursos →</a>
+            <a href="/admin/alumnos" class="admin-quick-link">Gestionar alumnos →</a>
+            <a href="/campus/" class="admin-quick-link">Vista alumno (campus) →</a>
+            <a href="/" class="admin-quick-link">Ver login público →</a>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initAdminShell } from "./shell.js";
+    import { getStats, getRecentActivity, formatDate, formatPrice } from "../js/data.js";
+
+    initAdminShell("dashboard");
+
+    const stats = getStats();
+    document.getElementById("metrics").innerHTML = `
+      <div class="admin-metric">
+        <p class="admin-metric-label">Cursos</p>
+        <p class="admin-metric-value">${stats.totalCourses}</p>
+        <p class="admin-metric-sub">${stats.publishedCourses} publicados</p>
+      </div>
+      <div class="admin-metric">
+        <p class="admin-metric-label">Alumnos activos</p>
+        <p class="admin-metric-value">${stats.activeStudents}</p>
+        <p class="admin-metric-sub">${stats.totalStudents} totales</p>
+      </div>
+      <div class="admin-metric">
+        <p class="admin-metric-label">Matrículas</p>
+        <p class="admin-metric-value">${stats.enrollments}</p>
+        <p class="admin-metric-sub">Asignaciones</p>
+      </div>
+      <div class="admin-metric">
+        <p class="admin-metric-label">Ingresos est.</p>
+        <p class="admin-metric-value admin-metric-value--sm">${formatPrice(stats.revenue)}</p>
+        <p class="admin-metric-sub">Según matrículas</p>
+      </div>
+    `;
+
+    const activity = getRecentActivity();
+    document.getElementById("activityBody").innerHTML = activity.length
+      ? activity
+          .map(
+            (item) => `
+          <tr>
+            <td>${item.label}</td>
+            <td>${item.detail}</td>
+            <td>${formatDate(item.date)}</td>
+          </tr>`
+          )
+          .join("")
+      : `<tr><td colspan="3" class="admin-empty">Sin actividad todavía.</td></tr>`;
+  </script>
+</body>
+</html>

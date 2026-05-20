@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Constructor de curso — Vallodental Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/login.css" />
+  <link rel="stylesheet" href="/admin/admin.css" />
+  <link rel="stylesheet" href="/admin/curso-editor.css" />
+</head>
+<body class="editor-page">
+
+  <header class="editor-topbar">
+    <div class="editor-topbar-left">
+      <a href="/admin/cursos" class="editor-back">← Cursos</a>
+      <h1 class="editor-topbar-title" id="topbarTitle">Constructor <em>visual</em></h1>
+      <span class="editor-autosave" id="autosaveStatus">Listo</span>
+      <span class="editor-status-pill" id="statusPill">Borrador</span>
+    </div>
+    <div class="editor-topbar-actions">
+      <button type="button" class="admin-btn admin-btn--ghost" id="dupCourseBtn">Duplicar</button>
+      <button type="button" class="admin-btn admin-btn--ghost" id="previewModeBtn">Vista alumno</button>
+      <button type="button" class="admin-btn admin-btn--ghost" id="saveBtn">Guardar</button>
+      <button type="button" class="admin-btn admin-btn--gold" id="publishBtn">Publicar</button>
+    </div>
+  </header>
+
+  <div class="builder-layout">
+    <!-- ÁRBOL ESTRUCTURA -->
+    <aside class="builder-tree" id="structureTree">
+      <div class="builder-tree-head">
+        <p class="login-kicker">Estructura</p>
+        <span class="admin-muted">Curso → Módulos → Temas → Lecciones · Actividades · Exámenes</span>
+      </div>
+      <button type="button" class="builder-tree-course is-active" id="selectCourseBtn">
+        <span>✦</span> Información del curso
+      </button>
+      <div class="tree-course-extras" id="courseItemsList"></div>
+      <div class="tree-inline-add" id="courseItemsAdd">
+        <button type="button" class="tree-mini-btn" id="addCourseActivity" title="Actividad del curso">+ ✏️ Actividad</button>
+        <button type="button" class="tree-mini-btn" id="addCourseExam" title="Examen del curso">+ 📝 Examen</button>
+      </div>
+      <div class="builder-tree-list" id="treeList"></div>
+      <div class="builder-tree-actions">
+        <button type="button" class="admin-btn admin-btn--ghost builder-add-btn" id="addModuleBtn">+ Módulo</button>
+      </div>
+    </aside>
+
+    <!-- EDITOR CENTRAL -->
+    <main class="builder-canvas" id="builderCanvas">
+      <div class="builder-tabs" id="mainTabs">
+        <button type="button" class="builder-tab is-active" data-tab="info">Información</button>
+        <button type="button" class="builder-tab" data-tab="desc">Descripción</button>
+        <button type="button" class="builder-tab" data-tab="content">Contenido</button>
+        <button type="button" class="builder-tab" data-tab="task">Tarea</button>
+        <button type="button" class="builder-tab" data-tab="quiz">Test</button>
+        <button type="button" class="builder-tab" data-tab="unlock">Desbloqueo</button>
+        <button type="button" class="builder-tab" data-tab="settings">Ajustes</button>
+      </div>
+      <div class="builder-panel" id="panelInfo"></div>
+      <div class="builder-panel is-hidden" id="panelDesc"></div>
+      <div class="builder-panel is-hidden" id="panelContent"></div>
+      <div class="builder-panel is-hidden" id="panelTask"></div>
+      <div class="builder-panel is-hidden" id="panelQuiz"></div>
+      <div class="builder-panel is-hidden" id="panelUnlock"></div>
+      <div class="builder-panel is-hidden" id="panelSettings"></div>
+    </main>
+
+    <!-- PREVIEW -->
+    <aside class="builder-preview" id="previewAside">
+      <p class="editor-preview-label">Vista previa en vivo</p>
+      <div id="livePreview"></div>
+    </aside>
+  </div>
+
+  <script type="module" src="/admin/curso-editor.js"></script>
+</body>
+</html>

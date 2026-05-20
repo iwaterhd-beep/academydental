@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Mi campus — Vallodental Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/login.css" />
+  <link rel="stylesheet" href="/campus/campus.css" />
+</head>
+<body class="campus-page">
+
+  <header class="campus-header">
+    <a href="/campus/" class="campus-brand">Vallodental <em>Academy</em></a>
+    <div class="campus-header-actions">
+      <span class="campus-user" id="campusUser"></span>
+      <button type="button" class="campus-btn campus-btn--ghost" id="logoutBtn">Salir</button>
+    </div>
+  </header>
+
+  <main class="campus-main">
+    <section class="campus-hero">
+      <p class="login-kicker">Campus del alumno</p>
+      <h2>Tus <em>cursos</em></h2>
+      <p class="admin-muted">Continúa tu formación donde lo dejaste.</p>
+    </section>
+    <div class="campus-grid" id="coursesGrid"></div>
+  </main>
+
+  <script type="module" src="/campus/campus.js"></script>
+</body>
+</html>

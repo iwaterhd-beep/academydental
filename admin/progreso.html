@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Progreso — Vallodental Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/login.css" />
+  <link rel="stylesheet" href="/admin/admin.css" />
+</head>
+<body class="admin-page">
+
+  <aside class="admin-sidebar">
+    <div>
+      <p class="login-kicker">Panel</p>
+      <h1 class="admin-brand">Vallodental<br><em>Academy</em></h1>
+      <p class="admin-tag">Administración</p>
+      <nav class="admin-nav">
+        <a href="/admin/" class="admin-nav-link" data-nav="dashboard">Dashboard</a>
+        <a href="/admin/cursos" class="admin-nav-link" data-nav="cursos">Cursos</a>
+        <a href="/admin/alumnos" class="admin-nav-link" data-nav="alumnos">Alumnos</a>
+        <a href="/admin/progreso" class="admin-nav-link" data-nav="progreso">Progreso</a>
+        <a href="/admin/correcciones" class="admin-nav-link" data-nav="correcciones">Correcciones</a>
+      </nav>
+    </div>
+    <div class="admin-footer">
+      <p class="admin-user">cursos@admin.com</p>
+      <button type="button" class="login-btn admin-logout" id="logoutBtn">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <header class="admin-header admin-header--row">
+      <div>
+        <p class="login-kicker">Seguimiento</p>
+        <h2 class="login-title admin-page-title">Progreso alumnos</h2>
+      </div>
+      <select class="editor-input" id="courseFilter" style="max-width:280px"></select>
+    </header>
+
+    <div class="admin-content">
+      <div class="admin-card admin-card--wide">
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Alumno</th>
+                <th>Progreso</th>
+                <th>Lecciones</th>
+                <th>Tiempo vídeo</th>
+              </tr>
+            </thead>
+            <tbody id="progressBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initAdminShell } from "./shell.js";
+    import { getCourses, getCourseProgressSummary } from "../js/data.js";
+
+    initAdminShell("progreso");
+
+    const filter = document.getElementById("courseFilter");
+    const tbody = document.getElementById("progressBody");
+    const courses = getCourses();
+
+    filter.innerHTML = courses.map((c, i) => `<option value="${c.id}" ${i === 0 ? "selected" : ""}>${c.title}</option>`).join("");
+
+    function render() {
+      const courseId = filter.value;
+      const rows = getCourseProgressSummary(courseId);
+      tbody.innerHTML = rows.length
+        ? rows.map(({ student, percent, completed, totalLessons, watchTime }) => `
+          <tr>
+            <td><strong>${student.name}</strong><br><span class="admin-muted">${student.email}</span></td>
+            <td style="min-width:180px">
+              <span>${percent}%</span>
+              <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${percent}%"></div></div>
+            </td>
+            <td>${completed} / ${totalLessons}</td>
+            <td>${Math.round(watchTime / 60)} min</td>
+          </tr>`).join("")
+        : `<tr><td colspan="4" class="admin-empty">No hay alumnos matriculados en este curso.</td></tr>`;
+    }
+
+    filter.onchange = render;
+    render();
+  </script>
+</body>
+</html>

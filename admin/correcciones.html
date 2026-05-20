@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Correcciones — Vallodental Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/login.css" />
+  <link rel="stylesheet" href="/admin/admin.css" />
+</head>
+<body class="admin-page">
+
+  <aside class="admin-sidebar">
+    <div>
+      <p class="login-kicker">Panel</p>
+      <h1 class="admin-brand">Vallodental<br><em>Academy</em></h1>
+      <p class="admin-tag">Administración</p>
+      <nav class="admin-nav">
+        <a href="/admin/" class="admin-nav-link" data-nav="dashboard">Dashboard</a>
+        <a href="/admin/cursos" class="admin-nav-link" data-nav="cursos">Cursos</a>
+        <a href="/admin/alumnos" class="admin-nav-link" data-nav="alumnos">Alumnos</a>
+        <a href="/admin/progreso" class="admin-nav-link" data-nav="progreso">Progreso</a>
+        <a href="/admin/correcciones" class="admin-nav-link" data-nav="correcciones">Correcciones</a>
+      </nav>
+    </div>
+    <div class="admin-footer">
+      <p class="admin-user">cursos@admin.com</p>
+      <button type="button" class="login-btn admin-logout" id="logoutBtn">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <header class="admin-header admin-header--row">
+      <div>
+        <p class="login-kicker">Profesor</p>
+        <h2 class="login-title admin-page-title">Correcciones pendientes</h2>
+      </div>
+      <select class="editor-input" id="statusFilter" style="max-width:200px">
+        <option value="pending_review">Pendientes</option>
+        <option value="graded">Corregidas</option>
+        <option value="">Todas</option>
+      </select>
+    </header>
+
+    <div class="admin-content" id="correctionsList"></div>
+  </main>
+
+  <script type="module">
+    import { initAdminShell, showToast, escapeHtml } from "./shell.js";
+    import { getSubmissions, getCourse, gradeSubmission, getStudent } from "../js/data.js";
+
+    initAdminShell("correcciones");
+
+    const list = document.getElementById("correctionsList");
+    const filter = document.getElementById("statusFilter");
+
+    function findAssignment(course, path) {
+      if (path.startsWith("course:")) {
+        const id = path.split(":")[1];
+        return course.items?.find((i) => i.id === id)?.assignment;
+      }
+      if (path.startsWith("module:")) {
+        const [, mid, iid] = path.split(":");
+        return course.structure.find((m) => m.id === mid)?.items?.find((i) => i.id === iid)?.assignment;
+      }
+      if (path.startsWith("topic:")) {
+        const [, mid, tid, iid] = path.split(":");
+        const topic = course.structure.find((m) => m.id === mid)?.topics.find((t) => t.id === tid);
+        return topic?.items?.find((i) => i.id === iid)?.assignment;
+      }
+      return null;
+    }
+
+    function textPointsMax(assignment) {
+      return (assignment?.questions || []).filter((q) => q.type === "text").reduce((s, q) => s + (q.points || 10), 0);
+    }
+
+    function render() {
+      const status = filter.value;
+      const subs = getSubmissions(status ? { status } : {});
+
+      list.innerHTML = subs.length
+        ? subs.map((sub) => {
+            const course = getCourse(sub.courseId);
+            const assignment = findAssignment(course, sub.path);
+            const textMax = textPointsMax(assignment);
+            const answersHtml = (assignment?.questions || []).map((q) => {
+              const ans = sub.answers[q.id];
+              if (q.type === "text") {
+                return `<div class="correction-answer"><strong>${escapeHtml(q.text)}</strong><p class="correction-text">${escapeHtml(ans?.text || "—")}</p></div>`;
+              }
+              const opt = q.options?.[ans?.selected];
+              const ok = Number(ans?.selected) === Number(q.correct);
+              return `<div class="correction-answer"><strong>${escapeHtml(q.text)}</strong><p>${escapeHtml(opt || "—")} ${ok ? "✓" : "✗"}</p></div>`;
+            }).join("");
+
+            const gradeForm = sub.status === "pending_review"
+              ? `<form class="correction-grade-form" data-id="${sub.id}">
+                  <label class="editor-field"><span class="editor-label">Puntos texto (máx. ${textMax})</span>
+                    <input class="editor-input" type="number" min="0" max="${textMax}" value="${textMax}" required /></label>
+                  <label class="editor-field editor-field--full"><span class="editor-label">Feedback al alumno</span>
+                    <textarea class="editor-input" rows="3" placeholder="Comentarios de corrección…"></textarea></label>
+                  <button type="submit" class="admin-btn admin-btn--gold">Guardar corrección</button>
+                </form>`
+              : `<p class="admin-muted">Corregido: ${sub.totalScore}/${sub.maxScore} pts — ${escapeHtml(sub.feedback || "Sin feedback")}</p>`;
+
+            return `<article class="admin-card correction-card">
+              <div class="correction-head">
+                <div>
+                  <p class="login-kicker">${escapeHtml(course?.title || "Curso")}</p>
+                  <h3 class="admin-card-title">${escapeHtml(sub.itemTitle)}</h3>
+                  <p class="admin-muted">${escapeHtml(sub.studentName)} · ${new Date(sub.submittedAt).toLocaleString("es-ES")}</p>
+                </div>
+                <span class="admin-badge admin-badge--${sub.status === "pending_review" ? "draft" : "published"}">${sub.status === "pending_review" ? "Pendiente" : "Corregida"}</span>
+              </div>
+              ${sub.autoMax ? `<p class="admin-muted">Auto (test): ${sub.autoScore}/${sub.autoMax} pts</p>` : ""}
+              <div class="correction-answers">${answersHtml}</div>
+              ${gradeForm}
+            </article>`;
+          }).join("")
+        : `<div class="admin-card"><p class="admin-empty">No hay entregas en esta categoría.</p></div>`;
+
+      list.querySelectorAll(".correction-grade-form").forEach((form) => {
+        form.onsubmit = (e) => {
+          e.preventDefault();
+          const score = Number(form.querySelector('input[type="number"]').value);
+          const feedback = form.querySelector("textarea").value.trim();
+          gradeSubmission(form.dataset.id, score, feedback);
+          showToast("Corrección guardada");
+          render();
+        };
+      });
+    }
+
+    filter.onchange = render;
+    render();
+  </script>
+</body>
+</html>

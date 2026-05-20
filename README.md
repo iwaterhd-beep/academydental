@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Vallodental Academy
 
-## Getting Started
+Plataforma HTML con login admin y **constructor visual de cursos** tipo Notion/Kajabi.
 
-First, run the development server:
+## Arrancar
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Login: http://localhost:3000
+- Admin: http://localhost:3000/admin/
+- **Constructor de cursos**: http://localhost:3000/admin/curso-editor.html?new=1
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Acceso admin
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Email | Contraseña |
+|-------|------------|
+| `cursos@admin.com` | `9999` |
 
-## Learn More
+## Constructor de cursos
 
-To learn more about Next.js, take a look at the following resources:
+Editor visual premium con:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **3 paneles**: estructura (árbol) · editor · vista previa en vivo
+- **Autoguardado** cada ~2 segundos
+- **Curso → Módulos → Temas → Lecciones**
+- **Bloques**: títulos, texto con color, emojis, imágenes, galerías, vídeo, PDF, STL, audio, listas, tablas, acordeones, tabs, alertas, botones
+- **Drag & drop** para reordenar bloques
+- **Tareas** con fecha límite y subida de archivos
+- **Tests** con preguntas test, tiempo límite e intentos
+- **Desbloqueo** progresivo, por fecha o manual
+- **Duplicar** cursos y lecciones
+- Portada, banner, trailer, categoría, nivel, instructor, etiquetas
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Datos en `localStorage` (preparado para migrar a Supabase).
 
-## Deploy on Vercel
+## Panel admin
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Sección | Función |
+|---------|---------|
+| Dashboard | Métricas generales |
+| Cursos | Listado + entrar al constructor |
+| Alumnos | Matrículas y asignación |
+| Progreso | % completado por alumno |
