@@ -4,6 +4,8 @@ import {
   saveCourse,
   createEmptyCourse,
   duplicateCourse,
+  importCourseJson,
+  reidModule,
   uid,
   createBlock,
   createAssignment,
@@ -12,6 +14,9 @@ import {
   STOCK_COVERS,
   LEVELS,
   LANGUAGES,
+  COURSE_CATEGORIES,
+  ACCESS_TYPES,
+  VISIBILITY_OPTIONS,
   STATUS_LABELS,
   emptyMod,
   emptyTopic,
@@ -19,10 +24,12 @@ import {
   emptyActivity,
   emptyExam,
   ACTIVITY_TYPES,
+  getCourseCurriculum,
 } from "../js/data.js";
 import { BLOCK_TOOLBAR, buildBlockEditor } from "./editor/blocks.js";
 import { renderCoursePreview, renderLessonPreview, renderActivityPreview, renderExamPreview, escapeHtml } from "./editor/preview.js";
 import { bindThemeToggle } from "../js/theme.js";
+import { downloadCourse, downloadCoursePdf } from "./shell.js";
 
 if (!requireAdmin()) throw new Error("unauthorized");
 
@@ -52,7 +59,10 @@ const els = {
   tabs: document.querySelectorAll(".builder-tab"),
   panels: {
     info: document.getElementById("panelInfo"),
+    access: document.getElementById("panelAccess"),
+    marketing: document.getElementById("panelMarketing"),
     desc: document.getElementById("panelDesc"),
+    overview: document.getElementById("panelOverview"),
     content: document.getElementById("panelContent"),
     task: document.getElementById("panelTask"),
     quiz: document.getElementById("panelQuiz"),
@@ -101,6 +111,34 @@ function getItemRef() {
   return getItemsList(selection).find((i) => i.id === selection.itemId) || null;
 }
 
+function getSelectedModule() {
+  if (!selection.moduleId) return null;
+  return course.structure.find((m) => m.id === selection.moduleId) || null;
+}
+
+function getSelectedTopic() {
+  if (selection.type !== "topic" || !selection.moduleId || !selection.topicId) return null;
+  const mod = getSelectedModule();
+  return mod?.topics.find((t) => t.id === selection.topicId) || null;
+}
+
+function countCourseStats() {
+  const curriculum = getCourseCurriculum(course);
+  const lessons = curriculum.filter((r) => r.item.kind === "lesson").length;
+  const activities = curriculum.filter((r) => r.item.kind === "activity").length;
+  const exams = curriculum.filter((r) => r.item.kind === "exam").length;
+  const mins = curriculum.reduce((acc, r) => acc + (r.item.durationMin || 0), 0);
+  return {
+    modules: course.structure.length,
+    topics: course.structure.reduce((n, m) => n + m.topics.length, 0),
+    lessons,
+    activities,
+    exams,
+    totalItems: curriculum.length,
+    durationMin: mins,
+  };
+}
+
 function itemIcon(kind) {
   if (kind === "lesson") return "🎬";
   if (kind === "activity") return "✏️";
@@ -147,11 +185,25 @@ function setTab(tab) {
 function updateTabsVisibility() {
   const tabQuiz = document.querySelector('.builder-tab[data-tab="quiz"]');
   if (selection.type === "course") {
-    const courseTabs = ["info", "desc", "settings"];
+    const courseTabs = ["info", "access", "marketing", "desc", "overview", "settings"];
     els.tabs.forEach((t) => {
       t.style.display = courseTabs.includes(t.dataset.tab) ? "" : "none";
     });
     if (tabQuiz) tabQuiz.textContent = "Test";
+    setTab("info");
+    return;
+  }
+  if (selection.type === "module") {
+    els.tabs.forEach((t) => {
+      t.style.display = ["info", "unlock"].includes(t.dataset.tab) ? "" : "none";
+    });
+    setTab("info");
+    return;
+  }
+  if (selection.type === "topic") {
+    els.tabs.forEach((t) => {
+      t.style.display = t.dataset.tab === "info" ? "" : "none";
+    });
     setTab("info");
     return;
   }
@@ -197,8 +249,8 @@ function renderTree() {
       (mod) => `
     <div class="tree-module" data-mod="${mod.id}">
       <div class="tree-row tree-row--mod ${selection.moduleId === mod.id && selection.type === "module" ? "is-active" : ""}" draggable="true">
-        <button type="button" class="tree-toggle" data-toggle-mod="${mod.id}">${mod.published ? "▾" : "▸"}</button>
-        <span class="tree-label" data-select-mod="${mod.id}">📁 ${escapeHtml(mod.title)}</span>
+        <button type="button" class="tree-toggle" data-toggle-mod="${mod.id}">▾</button>
+        <span class="tree-label" data-select-mod="${mod.id}">${mod.emoji || "📁"} ${escapeHtml(mod.title)}</span>
         <div class="tree-row-actions">
           <button type="button" data-add-topic="${mod.id}" title="Añadir tema">+</button>
           <button type="button" data-dup-mod="${mod.id}" title="Duplicar">⧉</button>
@@ -246,8 +298,48 @@ function bindTreeEvents() {
     renderAll();
   };
 
+  document.getElementById("addCourseLesson")?.addEventListener("click", () => addItemToScope("course", "lesson"));
   document.getElementById("addCourseActivity")?.addEventListener("click", () => addItemToScope("course", "activity"));
   document.getElementById("addCourseExam")?.addEventListener("click", () => addItemToScope("course", "exam"));
+
+  els.treeList.querySelectorAll("[data-select-mod]").forEach((el) => {
+    el.addEventListener("click", (e) => {
+      if (e.target.closest("button")) return;
+      selection = { type: "module", moduleId: el.dataset.selectMod };
+      document.getElementById("selectCourseBtn").classList.remove("is-active");
+      renderAll();
+    });
+  });
+
+  els.treeList.querySelectorAll("[data-select-topic]").forEach((el) => {
+    el.addEventListener("click", (e) => {
+      if (e.target.closest("button")) return;
+      const [mid, tid] = el.dataset.selectTopic.split(":");
+      selection = { type: "topic", moduleId: mid, topicId: tid };
+      document.getElementById("selectCourseBtn").classList.remove("is-active");
+      renderAll();
+    });
+  });
+
+  els.treeList.querySelectorAll("[data-toggle-mod]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const modEl = btn.closest(".tree-module");
+      modEl?.classList.toggle("is-collapsed");
+      btn.textContent = modEl?.classList.contains("is-collapsed") ? "▸" : "▾";
+    });
+  });
+
+  els.treeList.querySelectorAll("[data-dup-mod]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const mod = course.structure.find((m) => m.id === btn.dataset.dupMod);
+      if (!mod) return;
+      course.structure.push(reidModule(mod));
+      markDirty();
+      renderAll();
+    });
+  });
 
   document.querySelectorAll("[data-select-item]").forEach((row) => {
     row.addEventListener("click", (e) => {
@@ -392,6 +484,59 @@ function renderBlocksPanel(container, blocks) {
 
 function renderInfoPanel() {
   const p = els.panels.info;
+
+  if (selection.type === "module") {
+    const mod = getSelectedModule();
+    if (!mod) return;
+    p.innerHTML = `
+      <p class="login-kicker">Módulo</p>
+      <div class="editor-fields">
+        <label class="editor-field editor-field--full"><span class="editor-label">Título del módulo</span>
+          <input class="editor-input editor-input--title" id="modTitle" value="${escapeHtml(mod.title)}" /></label>
+        <label class="editor-field"><span class="editor-label">Icono / emoji</span>
+          <input class="editor-input" id="modEmoji" value="${escapeHtml(mod.emoji || "📁")}" maxlength="4" /></label>
+        <label class="editor-field"><span class="editor-label">Publicado</span>
+          <select class="editor-input" id="modPublished"><option value="1" ${mod.published ? "selected" : ""}>Sí</option><option value="0" ${!mod.published ? "selected" : ""}>Oculto</option></select></label>
+        <label class="editor-field editor-field--full"><span class="editor-label">Descripción</span>
+          <textarea class="editor-input" id="modDesc" rows="3">${escapeHtml(mod.description || "")}</textarea></label>
+      </div>`;
+    p.querySelector("#modTitle").oninput = (e) => { mod.title = e.target.value; markDirty(); renderTree(); };
+    p.querySelector("#modEmoji").oninput = (e) => { mod.emoji = e.target.value; markDirty(); renderTree(); };
+    p.querySelector("#modPublished").onchange = (e) => { mod.published = e.target.value === "1"; markDirty(); };
+    p.querySelector("#modDesc").oninput = (e) => { mod.description = e.target.value; markDirty(); };
+    return;
+  }
+
+  if (selection.type === "topic") {
+    const topic = getSelectedTopic();
+    if (!topic) return;
+    p.innerHTML = `
+      <p class="login-kicker">Tema</p>
+      <div class="editor-fields">
+        <label class="editor-field editor-field--full"><span class="editor-label">Título del tema</span>
+          <input class="editor-input editor-input--title" id="topicTitle" value="${escapeHtml(topic.title)}" /></label>
+        <label class="editor-field"><span class="editor-label">Publicado</span>
+          <select class="editor-input" id="topicPublished"><option value="1" ${topic.published ? "selected" : ""}>Sí</option><option value="0" ${!topic.published ? "selected" : ""}>Oculto</option></select></label>
+        <label class="editor-field editor-field--full"><span class="editor-label">Descripción</span>
+          <textarea class="editor-input" id="topicDesc" rows="3">${escapeHtml(topic.description || "")}</textarea></label>
+        <div class="editor-field editor-field--full">
+          <span class="editor-label">Acciones rápidas</span>
+          <div class="editor-quick-actions">
+            <button type="button" class="admin-btn admin-btn--ghost" id="topicAddLesson">+ Lección</button>
+            <button type="button" class="admin-btn admin-btn--ghost" id="topicAddAct">+ Actividad</button>
+            <button type="button" class="admin-btn admin-btn--ghost" id="topicAddExam">+ Examen</button>
+          </div>
+        </div>
+      </div>`;
+    p.querySelector("#topicTitle").oninput = (e) => { topic.title = e.target.value; markDirty(); renderTree(); };
+    p.querySelector("#topicPublished").onchange = (e) => { topic.published = e.target.value === "1"; markDirty(); };
+    p.querySelector("#topicDesc").oninput = (e) => { topic.description = e.target.value; markDirty(); };
+    p.querySelector("#topicAddLesson").onclick = () => addItemToScope("topic", "lesson", selection.moduleId, selection.topicId);
+    p.querySelector("#topicAddAct").onclick = () => addItemToScope("topic", "activity", selection.moduleId, selection.topicId);
+    p.querySelector("#topicAddExam").onclick = () => addItemToScope("topic", "exam", selection.moduleId, selection.topicId);
+    return;
+  }
+
   p.innerHTML = `
     <div class="editor-fields">
       <label class="editor-field editor-field--full"><span class="editor-label">Título</span>
@@ -400,8 +545,12 @@ function renderInfoPanel() {
         <input class="editor-input" id="fSubtitle" value="${escapeHtml(course.subtitle)}" /></label>
       <label class="editor-field editor-field--full"><span class="editor-label">Descripción corta</span>
         <textarea class="editor-input" id="fShort" rows="2">${escapeHtml(course.shortDescription)}</textarea></label>
+      <label class="editor-field"><span class="editor-label">Código SKU / referencia</span>
+        <input class="editor-input" id="fCode" value="${escapeHtml(course.courseCode)}" placeholder="CURSO-001" /></label>
+      <label class="editor-field"><span class="editor-label">URL slug</span>
+        <input class="editor-input" id="fSlug" value="${escapeHtml(course.slug)}" placeholder="proxesis-estetica" /></label>
       <label class="editor-field"><span class="editor-label">Categoría</span>
-        <input class="editor-input" id="fCategory" value="${escapeHtml(course.category)}" /></label>
+        <select class="editor-input" id="fCategory">${COURSE_CATEGORIES.map((c) => `<option ${course.category === c ? "selected" : ""}>${c}</option>`).join("")}</select></label>
       <label class="editor-field"><span class="editor-label">Nivel</span>
         <select class="editor-input" id="fLevel">${LEVELS.map((l) => `<option ${course.level === l ? "selected" : ""}>${l}</option>`).join("")}</select></label>
       <label class="editor-field"><span class="editor-label">Idioma</span>
@@ -409,11 +558,17 @@ function renderInfoPanel() {
       <label class="editor-field"><span class="editor-label">Instructor</span>
         <input class="editor-input" id="fInstructor" value="${escapeHtml(course.instructor)}" /></label>
       <label class="editor-field"><span class="editor-label">Precio (€)</span>
-        <input class="editor-input" id="fPrice" type="number" value="${course.price}" /></label>
+        <input class="editor-input" id="fPrice" type="number" min="0" step="1" value="${course.price}" /></label>
+      <label class="editor-field"><span class="editor-label">Precio tachado (€)</span>
+        <input class="editor-input" id="fComparePrice" type="number" min="0" step="1" value="${course.comparePrice || 0}" /></label>
       <label class="editor-field"><span class="editor-label">Duración (horas)</span>
-        <input class="editor-input" id="fDuration" type="number" value="${course.durationHours}" /></label>
+        <input class="editor-input" id="fDuration" type="number" min="0" value="${course.durationHours}" /></label>
       <label class="editor-field editor-field--full"><span class="editor-label">Etiquetas (separadas por coma)</span>
         <input class="editor-input" id="fTags" value="${escapeHtml(course.tags.join(", "))}" /></label>
+      <div class="editor-field editor-field--full builder-toggle-row">
+        <label><input type="checkbox" id="fFeatured" ${course.featured ? "checked" : ""} /> Destacar en catálogo</label>
+        <label><input type="checkbox" id="fAllowPreview" ${course.allowPreview ? "checked" : ""} /> Permitir vista previa gratuita</label>
+      </div>
       <div class="editor-field editor-field--full">
         <span class="editor-label">Portada / banner / miniatura</span>
         <div class="editor-cover-zone" id="coverZone">${course.coverImage ? `<img src="${course.coverImage}" alt="" />` : `<div class="editor-cover-placeholder"><strong>Subir portada premium</strong></div>`}</div>
@@ -456,9 +611,11 @@ function renderInfoPanel() {
   bind("#fTitle", "title");
   bind("#fSubtitle", "subtitle");
   bind("#fShort", "shortDescription");
-  bind("#fCategory", "category");
+  bind("#fCode", "courseCode");
+  bind("#fSlug", "slug");
   bind("#fInstructor", "instructor");
   bind("#fPrice", "price", (v) => Number(v));
+  bind("#fComparePrice", "comparePrice", (v) => Number(v));
   bind("#fDuration", "durationHours", (v) => Number(v));
   p.querySelector("#fTrailer")?.addEventListener("input", (e) => {
     course.trailerUrl = e.target.value.trim();
@@ -482,6 +639,9 @@ function renderInfoPanel() {
   });
   p.querySelector("#fLevel")?.addEventListener("change", (e) => { course.level = e.target.value; markDirty(); });
   p.querySelector("#fLang")?.addEventListener("change", (e) => { course.language = e.target.value; markDirty(); });
+  p.querySelector("#fCategory")?.addEventListener("change", (e) => { course.category = e.target.value; markDirty(); renderPreview(); });
+  p.querySelector("#fFeatured")?.addEventListener("change", (e) => { course.featured = e.target.checked; markDirty(); });
+  p.querySelector("#fAllowPreview")?.addEventListener("change", (e) => { course.allowPreview = e.target.checked; markDirty(); });
   p.querySelector("#fTags")?.addEventListener("input", (e) => {
     course.tags = e.target.value.split(",").map((t) => t.trim()).filter(Boolean);
     markDirty();
@@ -517,6 +677,87 @@ function renderInfoPanel() {
   });
 }
 
+function renderAccessPanel() {
+  const p = els.panels.access;
+  p.innerHTML = `
+    <p class="login-kicker">Acceso y matriculación</p>
+    <div class="editor-fields">
+      <label class="editor-field"><span class="editor-label">Tipo de acceso</span>
+        <select class="editor-input" id="aType">${Object.entries(ACCESS_TYPES).map(([k, v]) => `<option value="${k}" ${course.accessType === k ? "selected" : ""}>${v}</option>`).join("")}</select></label>
+      <label class="editor-field"><span class="editor-label">Visibilidad</span>
+        <select class="editor-input" id="aVis">${Object.entries(VISIBILITY_OPTIONS).map(([k, v]) => `<option value="${k}" ${course.visibility === k ? "selected" : ""}>${v}</option>`).join("")}</select></label>
+      <label class="editor-field"><span class="editor-label">Límite de plazas (0 = ilimitado)</span>
+        <input class="editor-input" id="aLimit" type="number" min="0" value="${course.enrollmentLimit || 0}" /></label>
+      <label class="editor-field"><span class="editor-label">Matrícula desde</span>
+        <input class="editor-input" id="aStart" type="date" value="${course.enrollmentStart || ""}" /></label>
+      <label class="editor-field"><span class="editor-label">Matrícula hasta</span>
+        <input class="editor-input" id="aEnd" type="date" value="${course.enrollmentEnd || ""}" /></label>
+      <label class="editor-field editor-field--full"><span class="editor-label">Mensaje de bienvenida al alumno</span>
+        <textarea class="editor-input" id="aWelcome" rows="4" placeholder="Se muestra al entrar al curso por primera vez">${escapeHtml(course.welcomeMessage || "")}</textarea></label>
+    </div>`;
+
+  p.querySelector("#aType").onchange = (e) => { course.accessType = e.target.value; markDirty(); };
+  p.querySelector("#aVis").onchange = (e) => { course.visibility = e.target.value; markDirty(); };
+  p.querySelector("#aLimit").oninput = (e) => { course.enrollmentLimit = Number(e.target.value); markDirty(); };
+  p.querySelector("#aStart").onchange = (e) => { course.enrollmentStart = e.target.value; markDirty(); };
+  p.querySelector("#aEnd").onchange = (e) => { course.enrollmentEnd = e.target.value; markDirty(); };
+  p.querySelector("#aWelcome").oninput = (e) => { course.welcomeMessage = e.target.value; markDirty(); };
+}
+
+function renderMarketingPanel() {
+  const p = els.panels.marketing;
+  const objectives = (course.objectives || []).join("\n");
+  p.innerHTML = `
+    <p class="login-kicker">Marketing y posicionamiento</p>
+    <label class="editor-field editor-field--full"><span class="editor-label">Público objetivo</span>
+      <input class="editor-input" id="mAudience" value="${escapeHtml(course.audience)}" placeholder="Ej. protésicos con experiencia básica en cerámica" /></label>
+    <label class="editor-field editor-field--full"><span class="editor-label">Requisitos previos</span>
+      <textarea class="editor-input" id="mReq" rows="3" placeholder="Conocimientos o materiales necesarios">${escapeHtml(course.requirements)}</textarea></label>
+    <label class="editor-field editor-field--full"><span class="editor-label">Objetivos de aprendizaje (uno por línea)</span>
+      <textarea class="editor-input" id="mObj" rows="6" placeholder="Al finalizar el curso el alumno podrá…">${escapeHtml(objectives)}</textarea></label>
+    <p class="admin-muted editor-hint">Los objetivos se pueden usar en landing, certificados y descripción.</p>`;
+
+  p.querySelector("#mAudience").oninput = (e) => { course.audience = e.target.value; markDirty(); };
+  p.querySelector("#mReq").oninput = (e) => { course.requirements = e.target.value; markDirty(); };
+  p.querySelector("#mObj").oninput = (e) => {
+    course.objectives = e.target.value.split("\n").map((l) => l.trim()).filter(Boolean);
+    markDirty();
+  };
+}
+
+function renderOverviewPanel() {
+  const stats = countCourseStats();
+  const p = els.panels.overview;
+  p.innerHTML = `
+    <p class="login-kicker">Resumen del curso</p>
+    <div class="editor-stats-grid">
+      <div class="editor-stat"><strong>${stats.modules}</strong><span>Módulos</span></div>
+      <div class="editor-stat"><strong>${stats.topics}</strong><span>Temas</span></div>
+      <div class="editor-stat"><strong>${stats.lessons}</strong><span>Lecciones</span></div>
+      <div class="editor-stat"><strong>${stats.activities}</strong><span>Actividades</span></div>
+      <div class="editor-stat"><strong>${stats.exams}</strong><span>Exámenes</span></div>
+      <div class="editor-stat"><strong>${Math.round(stats.durationMin / 60) || course.durationHours}h</strong><span>Duración est.</span></div>
+    </div>
+    <div class="editor-field editor-field--full" style="margin-top:24px">
+      <span class="editor-label">Estado</span>
+      <p class="admin-muted">${escapeHtml(STATUS_LABELS[course.status] || course.status)} · ${stats.totalItems} elementos · Código ${escapeHtml(course.courseCode || "—")}</p>
+    </div>
+    <div class="editor-quick-actions" style="margin-top:20px">
+      <button type="button" class="admin-btn admin-btn--ghost" id="overviewAddMod">+ Módulo</button>
+      <button type="button" class="admin-btn admin-btn--ghost" id="overviewDupCourse">Duplicar curso</button>
+    </div>`;
+
+  p.querySelector("#overviewAddMod").onclick = () => {
+    course.structure.push(emptyMod(`Módulo ${course.structure.length + 1}`));
+    markDirty();
+    renderAll();
+  };
+  p.querySelector("#overviewDupCourse").onclick = () => {
+    const copy = duplicateCourse(course.id);
+    if (copy) location.href = `/admin/curso-editor?id=${copy.id}`;
+  };
+}
+
 function renderDescPanel() {
   renderBlocksPanel(els.panels.desc, course.blocks);
 }
@@ -526,26 +767,77 @@ function renderContentPanel() {
   if (!item) return;
 
   if (item.kind === "lesson") {
+    if (!item.resources) item.resources = [];
     els.panels.content.innerHTML = `
       <label class="editor-field editor-field--full"><span class="editor-label">Título lección</span>
         <input class="editor-input editor-input--title" id="iTitle" value="${escapeHtml(item.title)}" /></label>
       <div class="editor-fields">
         <label class="editor-field"><span class="editor-label">Duración (min)</span>
-          <input class="editor-input" id="iDuration" type="number" value="${item.durationMin || 10}" /></label>
+          <input class="editor-input" id="iDuration" type="number" min="1" value="${item.durationMin || 10}" /></label>
         <label class="editor-field"><span class="editor-label">Publicada</span>
           <select class="editor-input" id="iPublished"><option value="1" ${item.published ? "selected" : ""}>Sí</option><option value="0" ${!item.published ? "selected" : ""}>Oculta</option></select></label>
       </div>
+      <div class="builder-toggle-row">
+        <label><input type="checkbox" id="iPreviewFree" ${item.isPreviewFree ? "checked" : ""} /> Lección de vista previa gratuita</label>
+        <label><input type="checkbox" id="iDownload" ${item.downloadEnabled !== false ? "checked" : ""} /> Permitir descargas</label>
+      </div>
+      <label class="editor-field editor-field--full"><span class="editor-label">Resumen / objetivos de la lección</span>
+        <textarea class="editor-input" id="iSummary" rows="2">${escapeHtml(item.summary || "")}</textarea></label>
       <label class="editor-field editor-field--full"><span class="editor-label">Vídeo de la lección</span>
         <input class="editor-input" id="iVideo" value="${escapeHtml(item.videoUrl)}" placeholder="YouTube, Vimeo o MP4" />
         <input type="file" id="iVideoFile" accept="video/*" style="margin-top:10px" /></label>
+      <p class="login-kicker" style="margin:24px 0 10px">Recursos descargables</p>
+      <div id="resourcesList" class="editor-resources-list"></div>
+      <button type="button" class="admin-btn admin-btn--ghost" id="addResourceBtn" style="margin-top:10px">+ Añadir recurso</button>
       <p class="login-kicker" style="margin:28px 0 12px">Bloques de contenido</p>
       <div id="itemBlocks"></div>`;
+
+    const renderResources = () => {
+      const list = els.panels.content.querySelector("#resourcesList");
+      if (!list) return;
+      list.innerHTML = item.resources.map((res, ri) => `
+        <div class="editor-resource-row">
+          <input class="editor-input" data-res-name="${ri}" value="${escapeHtml(res.name)}" placeholder="Nombre del archivo" />
+          <input class="editor-input" data-res-url="${ri}" value="${escapeHtml(res.url)}" placeholder="URL o sube abajo" />
+          <input type="file" data-res-file="${ri}" />
+          <button type="button" class="admin-link-btn admin-link-btn--danger" data-rm-res="${ri}">×</button>
+        </div>`).join("");
+
+      list.querySelectorAll("[data-res-name]").forEach((el) => {
+        el.oninput = () => { item.resources[el.dataset.resName].name = el.value; markDirty(); };
+      });
+      list.querySelectorAll("[data-res-url]").forEach((el) => {
+        el.oninput = () => { item.resources[el.dataset.resUrl].url = el.value; markDirty(); };
+      });
+      list.querySelectorAll("[data-res-file]").forEach((el) => {
+        el.onchange = (e) => uploadFile(e, (url) => {
+          item.resources[el.dataset.resFile].url = url;
+          if (!item.resources[el.dataset.resFile].name) {
+            item.resources[el.dataset.resFile].name = "Recurso";
+          }
+          markDirty();
+          renderResources();
+        });
+      });
+      list.querySelectorAll("[data-rm-res]").forEach((btn) => {
+        btn.onclick = () => { item.resources.splice(Number(btn.dataset.rmRes), 1); markDirty(); renderResources(); };
+      });
+    };
 
     els.panels.content.querySelector("#iTitle").oninput = (e) => { item.title = e.target.value; markDirty(); renderTree(); renderPreview(); };
     els.panels.content.querySelector("#iDuration").oninput = (e) => { item.durationMin = Number(e.target.value); markDirty(); };
     els.panels.content.querySelector("#iPublished").onchange = (e) => { item.published = e.target.value === "1"; markDirty(); };
+    els.panels.content.querySelector("#iPreviewFree").onchange = (e) => { item.isPreviewFree = e.target.checked; markDirty(); };
+    els.panels.content.querySelector("#iDownload").onchange = (e) => { item.downloadEnabled = e.target.checked; markDirty(); };
+    els.panels.content.querySelector("#iSummary").oninput = (e) => { item.summary = e.target.value; markDirty(); renderPreview(); };
     els.panels.content.querySelector("#iVideo").oninput = (e) => { item.videoUrl = e.target.value; markDirty(); renderPreview(); };
     els.panels.content.querySelector("#iVideoFile").onchange = (e) => uploadFile(e, (url) => { item.videoUrl = url; markDirty(); renderContentPanel(); renderPreview(); }, { maxMb: 50, kind: "video" });
+    els.panels.content.querySelector("#addResourceBtn").onclick = () => {
+      item.resources.push({ id: uid("res"), name: "Nuevo recurso", url: "", type: "file" });
+      markDirty();
+      renderResources();
+    };
+    renderResources();
     renderBlocksPanel(els.panels.content.querySelector("#itemBlocks"), item.blocks);
     return;
   }
@@ -862,6 +1154,21 @@ function renderQuizPanel() {
 }
 
 function renderUnlockPanel() {
+  if (selection.type === "module") {
+    const mod = getSelectedModule();
+    if (!mod) return;
+    els.panels.unlock.innerHTML = `
+      <p class="login-kicker">Desbloqueo del módulo</p>
+      <label class="editor-field"><span class="editor-label">Días tras matricularse (drip)</span>
+        <input class="editor-input" id="modUnlockDays" type="number" min="0" value="${mod.unlockDays || 0}" /></label>
+      <p class="admin-muted editor-hint">0 = disponible según reglas del curso. Con drip activo, el módulo se abre X días después de la matrícula.</p>`;
+    els.panels.unlock.querySelector("#modUnlockDays").oninput = (e) => {
+      mod.unlockDays = Number(e.target.value);
+      markDirty();
+    };
+    return;
+  }
+
   const item = getItemRef();
   if (!item) return;
   item.unlock = item.unlock || { mode: "sequential", date: null };
@@ -891,13 +1198,29 @@ function renderUnlockPanel() {
 function renderSettingsPanel() {
   const s = course.settings;
   els.panels.settings.innerHTML = `
+    <p class="login-kicker">Comportamiento del curso</p>
     <div class="builder-settings">
       <label class="builder-check"><input type="checkbox" id="sSeq" ${s.sequentialUnlock ? "checked" : ""} /> Desbloqueo progresivo por módulos</label>
-      <label class="builder-check"><input type="checkbox" id="sDrip" ${s.dripContent ? "checked" : ""} /> Contenido programado (drip)</label>
+      <label class="builder-check"><input type="checkbox" id="sDrip" ${s.dripContent ? "checked" : ""} /> Contenido programado (drip por días)</label>
+      <label class="builder-check"><input type="checkbox" id="sOrder" ${s.enforceLessonOrder !== false ? "checked" : ""} /> Obligar orden secuencial de lecciones</label>
       <label class="builder-check"><input type="checkbox" id="sCert" ${s.certificateEnabled ? "checked" : ""} /> Certificado automático al completar</label>
       <label class="builder-check"><input type="checkbox" id="sComments" ${s.commentsEnabled ? "checked" : ""} /> Comentarios en lecciones</label>
+      <label class="builder-check"><input type="checkbox" id="sCatalog" ${s.showInCatalog !== false ? "checked" : ""} /> Mostrar en catálogo del campus</label>
+      <label class="builder-check"><input type="checkbox" id="sDownloads" ${s.restrictDownloads ? "checked" : ""} /> Restringir descargas globales</label>
+      <label class="builder-check"><input type="checkbox" id="sRetake" ${s.retakeExams !== false ? "checked" : ""} /> Permitir reintentos en exámenes</label>
+      <label class="builder-check"><input type="checkbox" id="sNotify" ${s.notifyOnEnrollment !== false ? "checked" : ""} /> Notificar al profesor en nueva matrícula</label>
     </div>`;
-  [["sSeq", "sequentialUnlock"], ["sDrip", "dripContent"], ["sCert", "certificateEnabled"], ["sComments", "commentsEnabled"]].forEach(([id, key]) => {
+  [
+    ["sSeq", "sequentialUnlock"],
+    ["sDrip", "dripContent"],
+    ["sOrder", "enforceLessonOrder"],
+    ["sCert", "certificateEnabled"],
+    ["sComments", "commentsEnabled"],
+    ["sCatalog", "showInCatalog"],
+    ["sDownloads", "restrictDownloads"],
+    ["sRetake", "retakeExams"],
+    ["sNotify", "notifyOnEnrollment"],
+  ].forEach(([id, key]) => {
     els.panels.settings.querySelector(`#${id}`).onchange = (e) => {
       course.settings[key] = e.target.checked;
       markDirty();
@@ -942,8 +1265,16 @@ function renderPanels() {
   updateTabsVisibility();
   if (selection.type === "course") {
     renderInfoPanel();
+    renderAccessPanel();
+    renderMarketingPanel();
     renderDescPanel();
+    renderOverviewPanel();
     renderSettingsPanel();
+  } else if (selection.type === "module") {
+    renderInfoPanel();
+    renderUnlockPanel();
+  } else if (selection.type === "topic") {
+    renderInfoPanel();
   } else if (selection.type === "item") {
     renderContentPanel();
     renderTaskPanel();
@@ -982,6 +1313,55 @@ document.getElementById("dupCourseBtn").onclick = () => {
 document.getElementById("previewModeBtn").onclick = () => {
   document.getElementById("previewAside").scrollIntoView({ behavior: "smooth" });
 };
+
+document.getElementById("exportCourseBtn")?.addEventListener("click", () => {
+  if (downloadCourse(course.id)) {
+    els.autosave.textContent = "JSON descargado";
+    setTimeout(() => {
+      if (!dirty) els.autosave.textContent = `Guardado ${new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}`;
+    }, 2000);
+  }
+});
+
+document.getElementById("exportCoursePdfBtn")?.addEventListener("click", async (e) => {
+  const btn = e.currentTarget;
+  btn.disabled = true;
+  const prev = btn.textContent;
+  btn.textContent = "Generando…";
+  try {
+    if (await downloadCoursePdf(course.id)) {
+      els.autosave.textContent = "PDF descargado";
+      setTimeout(() => {
+        if (!dirty) els.autosave.textContent = `Guardado ${new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}`;
+      }, 2000);
+    }
+  } catch {
+    alert("No se pudo generar el PDF. Comprueba tu conexión.");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = prev;
+  }
+});
+
+document.getElementById("importCourseBtn")?.addEventListener("click", () => {
+  document.getElementById("importCourseFile")?.click();
+});
+
+document.getElementById("importCourseFile")?.addEventListener("change", (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const imported = importCourseJson(reader.result);
+      if (imported) location.href = `/admin/curso-editor?id=${imported.id}`;
+    } catch {
+      alert("Archivo JSON no válido.");
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+});
 
 window.addEventListener("beforeunload", (e) => {
   if (dirty) e.preventDefault();

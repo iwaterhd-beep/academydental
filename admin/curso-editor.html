@@ -32,6 +32,10 @@
         <svg class="theme-icon theme-icon--sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
         <svg class="theme-icon theme-icon--moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
       </button>
+      <button type="button" class="admin-btn admin-btn--ghost" id="exportCoursePdfBtn">↓ PDF</button>
+      <button type="button" class="admin-btn admin-btn--ghost" id="exportCourseBtn">↓ JSON</button>
+      <button type="button" class="admin-btn admin-btn--ghost" id="importCourseBtn">Importar</button>
+      <input type="file" id="importCourseFile" accept="application/json,.json" hidden />
       <button type="button" class="admin-btn admin-btn--ghost" id="dupCourseBtn">Duplicar</button>
       <button type="button" class="admin-btn admin-btn--ghost" id="previewModeBtn">Vista alumno</button>
       <button type="button" class="admin-btn admin-btn--ghost" id="saveBtn">Guardar</button>
@@ -51,6 +55,7 @@
       </button>
       <div class="tree-course-extras" id="courseItemsList"></div>
       <div class="tree-inline-add" id="courseItemsAdd">
+        <button type="button" class="tree-mini-btn" id="addCourseLesson" title="Lección del curso">+ 🎬 Lección</button>
         <button type="button" class="tree-mini-btn" id="addCourseActivity" title="Actividad del curso">+ ✏️ Actividad</button>
         <button type="button" class="tree-mini-btn" id="addCourseExam" title="Examen del curso">+ 📝 Examen</button>
       </div>
@@ -64,7 +69,10 @@
     <main class="builder-canvas" id="builderCanvas">
       <div class="builder-tabs" id="mainTabs">
         <button type="button" class="builder-tab is-active" data-tab="info">Información</button>
+        <button type="button" class="builder-tab" data-tab="access">Acceso</button>
+        <button type="button" class="builder-tab" data-tab="marketing">Marketing</button>
         <button type="button" class="builder-tab" data-tab="desc">Descripción</button>
+        <button type="button" class="builder-tab" data-tab="overview">Resumen</button>
         <button type="button" class="builder-tab" data-tab="content">Contenido</button>
         <button type="button" class="builder-tab" data-tab="task">Tarea</button>
         <button type="button" class="builder-tab" data-tab="quiz">Test</button>
@@ -72,7 +80,10 @@
         <button type="button" class="builder-tab" data-tab="settings">Ajustes</button>
       </div>
       <div class="builder-panel" id="panelInfo"></div>
+      <div class="builder-panel is-hidden" id="panelAccess"></div>
+      <div class="builder-panel is-hidden" id="panelMarketing"></div>
       <div class="builder-panel is-hidden" id="panelDesc"></div>
+      <div class="builder-panel is-hidden" id="panelOverview"></div>
       <div class="builder-panel is-hidden" id="panelContent"></div>
       <div class="builder-panel is-hidden" id="panelTask"></div>
       <div class="builder-panel is-hidden" id="panelQuiz"></div>

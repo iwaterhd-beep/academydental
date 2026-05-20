@@ -28,8 +28,56 @@
         <p class="login-kicker">Contenido</p>
         <h2 class="login-title admin-page-title">Cursos</h2>
       </div>
-      <a href="/admin/curso-editor?new=1" class="admin-btn admin-btn--gold" id="createCourseBtn">+ Crear curso</a>
+      <button type="button" class="admin-btn admin-btn--ghost" id="downloadAllCoursesPdfBtn">↓ PDF todos</button>
+      <button type="button" class="admin-btn admin-btn--ghost" id="downloadAllCoursesBtn">↓ JSON todos</button>
+      <button type="button" class="admin-btn admin-btn--gold" id="createCourseBtn">+ Crear curso</button>
     </header>
+
+    <div class="adm-modal" id="createCourseModal" hidden>
+      <div class="adm-modal-backdrop" data-close-modal></div>
+      <div class="adm-modal-panel adm-modal-panel--wide" role="dialog" aria-labelledby="createModalTitle">
+        <header class="adm-modal-head">
+          <div>
+            <p class="login-kicker">Nuevo curso</p>
+            <h3 class="adm-modal-title" id="createModalTitle">Elige plantilla y opciones</h3>
+          </div>
+          <button type="button" class="adm-modal-close" data-close-modal aria-label="Cerrar">×</button>
+        </header>
+        <form class="adm-modal-body" id="createCourseForm">
+          <div class="adm-template-grid" id="templateGrid"></div>
+          <div class="adm-form-grid" style="margin-top:24px">
+            <label class="adm-setting-field">
+              <span class="adm-setting-label">Título del curso</span>
+              <input class="adm-input" type="text" id="newCourseTitle" required placeholder="Ej. Prótesis fija estética anterior" />
+            </label>
+            <label class="adm-setting-field">
+              <span class="adm-setting-label">Categoría</span>
+              <select class="adm-select adm-select--full" id="newCourseCategory"></select>
+            </label>
+            <label class="adm-setting-field">
+              <span class="adm-setting-label">Nivel</span>
+              <select class="adm-select adm-select--full" id="newCourseLevel"></select>
+            </label>
+            <label class="adm-setting-field">
+              <span class="adm-setting-label">Precio (€)</span>
+              <input class="adm-input" type="number" id="newCoursePrice" min="0" step="1" value="0" />
+            </label>
+            <label class="adm-setting-field">
+              <span class="adm-setting-label">Tipo de acceso</span>
+              <select class="adm-select adm-select--full" id="newCourseAccess"></select>
+            </label>
+            <label class="adm-setting-field">
+              <span class="adm-setting-label">Instructor</span>
+              <input class="adm-input" type="text" id="newCourseInstructor" placeholder="Alfredo Vallo" />
+            </label>
+          </div>
+          <footer class="adm-modal-foot">
+            <button type="button" class="adm-btn adm-btn--ghost" data-close-modal>Cancelar</button>
+            <button type="submit" class="adm-btn adm-btn--gold">Crear y abrir constructor</button>
+          </footer>
+        </form>
+      </div>
+    </div>
 
     <div class="admin-content">
       <div class="courses-grid" id="coursesGrid"></div>
@@ -37,7 +85,7 @@
   </main>
 
   <script type="module">
-    import { initAdminShell, showToast, confirmAction, escapeHtml } from "./shell.js";
+    import { initAdminShell, showToast, confirmAction, escapeHtml, downloadCourse, downloadCoursePdf, downloadAllCourses, downloadAllCoursesPdf } from "./shell.js";
     import {
       getCourses,
       deleteCourse,
@@ -46,11 +94,93 @@
       getCourseAdminStats,
       formatPrice,
       STATUS_LABELS,
+      createCourseFromOptions,
+      COURSE_TEMPLATES,
+      COURSE_CATEGORIES,
+      LEVELS,
+      ACCESS_TYPES,
+      getPlatformSettings,
     } from "../js/data.js";
 
     initAdminShell("cursos");
 
     const grid = document.getElementById("coursesGrid");
+    const modal = document.getElementById("createCourseModal");
+    const form = document.getElementById("createCourseForm");
+    let selectedTemplate = "blank";
+
+    function openCreateModal() {
+      selectedTemplate = "blank";
+      const platform = getPlatformSettings();
+      document.getElementById("newCourseTitle").value = "";
+      document.getElementById("newCoursePrice").value = "0";
+      document.getElementById("newCourseInstructor").value = platform.communication?.teacherName || "Alfredo Vallo";
+      document.getElementById("newCourseCategory").innerHTML = COURSE_CATEGORIES.map((c) => `<option>${escapeHtml(c)}</option>`).join("");
+      document.getElementById("newCourseLevel").innerHTML = LEVELS.map((l) => `<option ${l === "Intermedio" ? "selected" : ""}>${escapeHtml(l)}</option>`).join("");
+      document.getElementById("newCourseAccess").innerHTML = Object.entries(ACCESS_TYPES).map(([k, v]) => `<option value="${k}">${escapeHtml(v)}</option>`).join("");
+      document.getElementById("templateGrid").innerHTML = COURSE_TEMPLATES.map(
+        (t) => `
+        <button type="button" class="adm-template-card ${t.id === selectedTemplate ? "is-selected" : ""}" data-template="${t.id}">
+          <span class="adm-template-icon">${t.icon}</span>
+          <strong>${escapeHtml(t.label)}</strong>
+          <em>${escapeHtml(t.desc)}</em>
+        </button>`
+      ).join("");
+      document.querySelectorAll("[data-template]").forEach((btn) => {
+        btn.onclick = () => {
+          selectedTemplate = btn.dataset.template;
+          document.querySelectorAll("[data-template]").forEach((b) => b.classList.toggle("is-selected", b.dataset.template === selectedTemplate));
+        };
+      });
+      modal.hidden = false;
+      document.body.classList.add("adm-modal-open");
+    }
+
+    function closeCreateModal() {
+      modal.hidden = true;
+      document.body.classList.remove("adm-modal-open");
+    }
+
+    document.getElementById("createCourseBtn").onclick = openCreateModal;
+    document.getElementById("downloadAllCoursesBtn")?.addEventListener("click", () => {
+      if (downloadAllCourses()) showToast("JSON descargado.");
+      else showToast("No hay cursos para descargar.", "error");
+    });
+    document.getElementById("downloadAllCoursesPdfBtn")?.addEventListener("click", async (e) => {
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      btn.textContent = "Generando PDF…";
+      try {
+        if (await downloadAllCoursesPdf()) showToast("PDF descargado.");
+        else showToast("No hay cursos para descargar.", "error");
+      } catch {
+        showToast("Error al generar el PDF.", "error");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "↓ PDF todos";
+      }
+    });
+    modal.querySelectorAll("[data-close-modal]").forEach((el) => {
+      el.onclick = closeCreateModal;
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const title = document.getElementById("newCourseTitle").value.trim();
+      if (!title) return;
+      const price = Number(document.getElementById("newCoursePrice").value) || 0;
+      const accessVal = document.getElementById("newCourseAccess").value;
+      const course = createCourseFromOptions({
+        template: selectedTemplate,
+        title,
+        category: document.getElementById("newCourseCategory").value,
+        level: document.getElementById("newCourseLevel").value,
+        price,
+        accessType: accessVal || (price > 0 ? "paid" : "free"),
+        instructor: document.getElementById("newCourseInstructor").value.trim(),
+      });
+      location.href = `/admin/curso-editor?id=${course.id}`;
+    });
 
     function badge(status) {
       return `<span class="admin-badge admin-badge--${status}">${STATUS_LABELS[status] || status}</span>`;
@@ -89,6 +219,8 @@
                 <a href="/admin/curso-editor?id=${c.id}" class="admin-btn admin-btn--gold">Editar</a>
                 <button type="button" class="admin-btn admin-btn--ghost" data-toggle="${c.id}">${c.status === "published" ? "Ocultar" : "Publicar"}</button>
                 <button type="button" class="admin-btn admin-btn--ghost" data-dup="${c.id}">Duplicar</button>
+                <button type="button" class="admin-btn admin-btn--ghost" data-download-pdf="${c.id}">↓ PDF</button>
+                <button type="button" class="admin-link-btn" data-download="${c.id}">JSON</button>
                 <a href="/admin/progreso" class="admin-link-btn">Analytics</a>
                 <button type="button" class="admin-link-btn admin-link-btn--danger" data-del="${c.id}">Eliminar</button>
               </div>
@@ -96,7 +228,7 @@
           </article>`;
             })
             .join("")
-        : `<div class="admin-card admin-card--wide adm-empty-panel"><div class="admin-empty" style="padding:60px">No hay cursos. <a href="/admin/curso-editor?new=1">Crea el primero</a></div></div>`;
+        : `<div class="admin-card admin-card--wide adm-empty-panel"><div class="admin-empty" style="padding:60px">No hay cursos. <button type="button" class="admin-link-btn" id="emptyCreateBtn">Crea el primero</button></div></div>`;
 
       grid.querySelectorAll("[data-del]").forEach((btn) => {
         btn.onclick = () => {
@@ -112,6 +244,28 @@
           if (copy) location.href = `/admin/curso-editor?id=${copy.id}`;
         };
       });
+      grid.querySelectorAll("[data-download]").forEach((btn) => {
+        btn.onclick = () => {
+          if (downloadCourse(btn.dataset.download)) showToast("JSON descargado.");
+          else showToast("No se pudo descargar.", "error");
+        };
+      });
+      grid.querySelectorAll("[data-download-pdf]").forEach((btn) => {
+        btn.onclick = async () => {
+          const label = btn.textContent;
+          btn.disabled = true;
+          btn.textContent = "…";
+          try {
+            if (await downloadCoursePdf(btn.dataset.downloadPdf)) showToast("PDF descargado.");
+            else showToast("No se pudo generar el PDF.", "error");
+          } catch {
+            showToast("Error al generar el PDF.", "error");
+          } finally {
+            btn.disabled = false;
+            btn.textContent = label;
+          }
+        };
+      });
       grid.querySelectorAll("[data-toggle]").forEach((btn) => {
         btn.onclick = () => {
           const updated = toggleCourseStatus(btn.dataset.toggle);
@@ -121,6 +275,7 @@
           }
         };
       });
+      document.getElementById("emptyCreateBtn")?.addEventListener("click", openCreateModal);
     }
 
     render();

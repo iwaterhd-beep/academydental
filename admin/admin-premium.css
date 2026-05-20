@@ -1621,3 +1621,138 @@ body.admin-premium .admin-table tbody tr:hover {
     align-items: flex-start;
   }
 }
+
+/* ——— Modal crear curso ——— */
+.adm-modal[hidden] {
+  display: none !important;
+}
+
+.adm-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.adm-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+}
+
+.adm-modal-panel {
+  position: relative;
+  width: min(560px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  border: 1px solid var(--adm-border, rgba(255, 255, 255, 0.1));
+  border-radius: 16px;
+  background: var(--adm-surface, rgba(14, 14, 14, 0.96));
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+}
+
+.adm-modal-panel--wide {
+  width: min(780px, 100%);
+}
+
+.adm-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 28px 0;
+}
+
+.adm-modal-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 300;
+}
+
+.adm-modal-close {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.adm-modal-body {
+  padding: 20px 28px 28px;
+}
+
+.adm-modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--adm-border, rgba(255, 255, 255, 0.08));
+}
+
+.adm-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .adm-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.adm-template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.adm-template-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.adm-template-card:hover {
+  border-color: rgba(201, 169, 110, 0.35);
+}
+
+.adm-template-card.is-selected {
+  border-color: var(--gold);
+  background: rgba(201, 169, 110, 0.1);
+}
+
+.adm-template-icon {
+  font-size: 20px;
+  color: var(--gold);
+}
+
+.adm-template-card strong {
+  font-size: 13px;
+}
+
+.adm-template-card em {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: normal;
+  line-height: 1.4;
+}
+
+body.adm-modal-open {
+  overflow: hidden;
+}

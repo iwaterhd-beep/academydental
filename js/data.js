@@ -176,6 +176,50 @@ export const STOCK_COVERS = [
 export const LEVELS = ["Principiante", "Intermedio", "Avanzado", "Experto"];
 export const LANGUAGES = ["Español", "Inglés", "Portugués"];
 
+export const COURSE_CATEGORIES = [
+  "General",
+  "Estética",
+  "Implantes",
+  "Prótesis fija",
+  "Prótesis removible",
+  "Ortodoncia",
+  "Digital CAD/CAM",
+  "Laboratorio",
+  "Clínica",
+  "Gestión",
+];
+
+export const ACCESS_TYPES = {
+  free: "Gratuito",
+  paid: "De pago",
+  private: "Privado (solo matriculados)",
+  invite: "Solo invitación",
+};
+
+export const VISIBILITY_OPTIONS = {
+  catalog: "Visible en catálogo",
+  hidden: "Oculto (solo enlace directo)",
+};
+
+export const COURSE_TEMPLATES = [
+  { id: "blank", label: "En blanco", desc: "1 módulo vacío — defines todo tú", icon: "◻" },
+  { id: "mini", label: "Mini-curso", desc: "3 lecciones + certificado", icon: "▢" },
+  { id: "masterclass", label: "Masterclass", desc: "Teoría, práctica y examen final", icon: "✦" },
+  { id: "full", label: "Programa completo", desc: "3 módulos con actividades y evaluación", icon: "▤" },
+  { id: "demo", label: "Desde demo", desc: "Copia el curso de muestra Vallodental", icon: "★" },
+];
+
+function slugify(text) {
+  return (
+    String(text || "curso")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "") || "curso"
+  );
+}
+
 function emptyDescBlocks() {
   return [
     createBlock("heading", { text: "Sobre este curso", size: "xl" }),
@@ -200,6 +244,10 @@ function emptyLesson() {
     published: true,
     durationMin: 10,
     videoUrl: "",
+    summary: "",
+    isPreviewFree: false,
+    downloadEnabled: true,
+    resources: [],
     blocks: [createBlock("paragraph", { text: "Contenido de la lección..." })],
     assignment: null,
     quiz: null,
@@ -256,6 +304,10 @@ function normalizeItem(raw) {
       assignment: raw.assignment ? normalizeAssignment(raw.assignment) : null,
       quiz: raw.quiz ?? null,
       unlock: raw.unlock || base.unlock,
+      summary: raw.summary || "",
+      isPreviewFree: !!raw.isPreviewFree,
+      downloadEnabled: raw.downloadEnabled !== false,
+      resources: Array.isArray(raw.resources) ? raw.resources : [],
     };
   }
   if (kind === "activity") {
@@ -290,19 +342,33 @@ function migrateTopicItems(topic) {
 }
 
 function emptyTopic(title = "Nuevo tema") {
-  return { id: uid("t"), title, published: true, items: [emptyLessonItem()] };
+  return { id: uid("t"), title, description: "", published: true, unlockDays: 0, items: [emptyLessonItem()] };
 }
 
 function emptyMod(title = "Módulo 1") {
-  return { id: uid("m"), title, published: true, unlockDays: 0, items: [], topics: [emptyTopic("Tema 1")] };
+  return {
+    id: uid("m"),
+    title,
+    description: "",
+    emoji: "📁",
+    published: true,
+    unlockDays: 0,
+    items: [],
+    topics: [emptyTopic("Tema 1")],
+  };
 }
 
 function normalizeStructure(structure) {
   return structure.map((mod) => ({
     ...mod,
+    description: mod.description || "",
+    emoji: mod.emoji || "📁",
+    unlockDays: Number(mod.unlockDays) || 0,
     items: (mod.items || []).map(normalizeItem),
     topics: (mod.topics || []).map((t) => ({
       ...t,
+      description: t.description || "",
+      unlockDays: Number(t.unlockDays) || 0,
       items: migrateTopicItems(t),
     })),
   }));
@@ -336,18 +402,34 @@ function migrateStructure(course) {
 
 export function normalizeCourse(course) {
   const structure = normalizeStructure(migrateStructure(course));
+  const title = course.title || "Sin título";
+  const price = Number(course.price) || 0;
   return {
     id: course.id,
-    title: course.title || "Sin título",
+    title,
     subtitle: course.subtitle || "",
     shortDescription: course.shortDescription || "",
+    slug: course.slug || slugify(title),
+    courseCode: course.courseCode || "",
     category: course.category || "General",
     level: course.level || "Intermedio",
     language: course.language || "Español",
     instructor: course.instructor || "Alfredo Vallo",
     tags: Array.isArray(course.tags) ? course.tags : [],
+    objectives: Array.isArray(course.objectives) ? course.objectives : [],
+    requirements: course.requirements || "",
+    audience: course.audience || "",
+    welcomeMessage: course.welcomeMessage || "",
     status: course.status || "draft",
-    price: Number(course.price) || 0,
+    price,
+    comparePrice: Number(course.comparePrice) || 0,
+    accessType: course.accessType || (price > 0 ? "paid" : "free"),
+    visibility: course.visibility || "catalog",
+    featured: !!course.featured,
+    allowPreview: course.allowPreview !== false,
+    enrollmentLimit: Number(course.enrollmentLimit) || 0,
+    enrollmentStart: course.enrollmentStart || "",
+    enrollmentEnd: course.enrollmentEnd || "",
     durationHours: Number(course.durationHours) || 0,
     accentColor: course.accentColor || "#c9a96e",
     coverImage: course.coverImage || "",
@@ -362,6 +444,11 @@ export function normalizeCourse(course) {
       dripContent: course.settings?.dripContent || false,
       certificateEnabled: course.settings?.certificateEnabled !== false,
       commentsEnabled: course.settings?.commentsEnabled !== false,
+      showInCatalog: course.settings?.showInCatalog !== false,
+      enforceLessonOrder: course.settings?.enforceLessonOrder !== false,
+      restrictDownloads: course.settings?.restrictDownloads || false,
+      retakeExams: course.settings?.retakeExams !== false,
+      notifyOnEnrollment: course.settings?.notifyOnEnrollment !== false,
       ...(course.settings || {}),
     },
     modules: structure.length,
@@ -751,26 +838,140 @@ export function saveCourse(course) {
 }
 
 export function createEmptyCourse() {
-  const learning = getPlatformSettings().learning;
-  return saveCourse({
-    id: uid("c"),
-    title: "Nuevo curso",
-    subtitle: "",
-    shortDescription: "",
-    category: "General",
-    status: "draft",
-    price: 0,
-    structure: [emptyMod()],
-    blocks: emptyDescBlocks(),
-    settings: {
-      sequentialUnlock: learning.defaultSequentialUnlock,
-      dripContent: false,
-      certificateEnabled: learning.certificatesEnabled,
-      commentsEnabled: true,
-    },
-    createdAt: new Date().toISOString(),
-  });
+  return createCourseFromOptions({ template: "blank" });
 }
+
+function reidModule(mod) {
+  const copy = structuredClone(mod);
+  copy.id = uid("m");
+  copy.topics = (copy.topics || []).map((t) => {
+    t.id = uid("t");
+    t.items = (t.items || []).map((item) => ({
+      ...item,
+      id: uid(item.kind === "lesson" ? "l" : item.kind === "activity" ? "act" : "ex"),
+    }));
+    return t;
+  });
+  copy.items = (copy.items || []).map((item) => ({
+    ...item,
+    id: uid(item.kind === "lesson" ? "l" : item.kind === "activity" ? "act" : "ex"),
+  }));
+  return copy;
+}
+
+function buildTemplateStructure(templateId) {
+  const lesson = (title) => ({ ...emptyLessonItem(), id: uid("l"), title });
+  const topic = (title, items) => ({ ...emptyTopic(title), id: uid("t"), items });
+  const mod = (title, topics, extras = {}) => ({ ...emptyMod(title), id: uid("m"), ...extras, topics });
+
+  switch (templateId) {
+    case "mini":
+      return [mod("Módulo principal", [topic("Contenido", [lesson("Lección 1"), lesson("Lección 2"), lesson("Lección 3")])])];
+    case "masterclass":
+      return [
+        mod("Sesión intensiva", [
+          topic("Teoría", [lesson("Introducción"), lesson("Protocolo avanzado")]),
+          topic("Práctica y evaluación", [emptyActivity("Caso clínico"), emptyExam("Evaluación final")]),
+        ]),
+      ];
+    case "full":
+      return [
+        mod("Módulo 1 · Fundamentos", [topic("Introducción", [lesson("Bienvenida"), lesson("Materiales y herramientas")])]),
+        mod("Módulo 2 · Práctica", [topic("Laboratorio", [lesson("Demostración"), emptyActivity("Actividad guiada")])]),
+        mod("Módulo 3 · Evaluación", [topic("Cierre", [lesson("Resumen del programa"), emptyExam("Examen final")])]),
+      ];
+    case "demo":
+      return structuredClone(getSampleCourseRaw()).structure;
+    default:
+      return [emptyMod()];
+  }
+}
+
+/** Crea un curso con plantilla y opciones iniciales. */
+export function createCourseFromOptions(opts = {}) {
+  const platform = getPlatformSettings();
+  const {
+    template = "blank",
+    title = "Nuevo curso",
+    category = "General",
+    level = "Intermedio",
+    price = 0,
+    accessType,
+    instructor = platform.communication?.teacherName || "Alfredo Vallo",
+  } = opts;
+
+  if (template === "demo") {
+    const demo = structuredClone(getSampleCourseRaw());
+    demo.id = uid("c");
+    demo.title = title || `${demo.title} (copia)`;
+    demo.status = "draft";
+    demo.category = category;
+    demo.level = level;
+    demo.price = Number(price) || demo.price;
+    demo.accessType = accessType || (demo.price > 0 ? "paid" : "free");
+    demo.instructor = instructor;
+    demo.createdAt = new Date().toISOString();
+    return saveCourse(normalizeCourse(demo));
+  }
+
+  const learning = platform.learning;
+  const numPrice = Number(price) || 0;
+  return saveCourse(
+    normalizeCourse({
+      id: uid("c"),
+      title,
+      category,
+      level,
+      price: numPrice,
+      accessType: accessType || (numPrice > 0 ? "paid" : "free"),
+      instructor,
+      status: "draft",
+      structure: buildTemplateStructure(template),
+      blocks: emptyDescBlocks(),
+      settings: {
+        sequentialUnlock: learning.defaultSequentialUnlock,
+        dripContent: template === "full",
+        certificateEnabled: learning.certificatesEnabled,
+        commentsEnabled: true,
+      },
+      createdAt: new Date().toISOString(),
+    })
+  );
+}
+
+export function exportCourseJson(courseId) {
+  const c = getCourse(courseId);
+  return c ? JSON.stringify(c, null, 2) : null;
+}
+
+/** Exportación JSON de todos los cursos (solo uso admin). */
+export function exportAllCoursesJson() {
+  return JSON.stringify(
+    {
+      type: "vallodental_courses_export",
+      exportedAt: new Date().toISOString(),
+      courses: getCourses(),
+    },
+    null,
+    2
+  );
+}
+
+export function getCourseDownloadFilename(course) {
+  const base = course?.slug || course?.id || "curso";
+  return `${String(base).replace(/[^\w.-]+/g, "-")}.json`;
+}
+
+export function importCourseJson(json, { newTitle } = {}) {
+  const raw = typeof json === "string" ? JSON.parse(json) : json;
+  raw.id = uid("c");
+  raw.status = "draft";
+  raw.title = newTitle || `${raw.title || "Curso"} (importado)`;
+  raw.createdAt = new Date().toISOString();
+  return saveCourse(normalizeCourse(raw));
+}
+
+export { reidModule };
 
 export function duplicateCourse(id) {
   const src = getCourse(id);

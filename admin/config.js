@@ -1,4 +1,4 @@
-import { initAdminShell, showToast, confirmAction, escapeHtml } from "./shell.js";
+import { initAdminShell, showToast, confirmAction, escapeHtml, downloadAllCourses, downloadAllCoursesPdf } from "./shell.js";
 import {
   getPlatformSettings,
   savePlatformSettings,
@@ -119,6 +119,8 @@ function sectionContent(id) {
         <p class="adm-settings-lead">Copia de seguridad, restauración y opciones sensibles del sistema.</p>
         <div class="adm-settings-actions-grid">
           <button type="button" class="adm-btn adm-btn--ghost" id="exportDataBtn">↓ Exportar datos JSON</button>
+          <button type="button" class="adm-btn adm-btn--ghost" id="downloadCoursesPdfBtn">↓ Descargar cursos PDF</button>
+          <button type="button" class="adm-btn adm-btn--ghost" id="downloadCoursesBtn">↓ Descargar cursos JSON</button>
           <label class="adm-btn adm-btn--ghost adm-file-btn">
             ↑ Importar backup
             <input type="file" id="importDataInput" accept="application/json,.json" hidden />
@@ -173,6 +175,25 @@ function render() {
 
   document.getElementById("saveSectionBtn")?.addEventListener("click", saveCurrentSection);
   document.getElementById("exportDataBtn")?.addEventListener("click", exportData);
+  document.getElementById("downloadCoursesBtn")?.addEventListener("click", () => {
+    if (downloadAllCourses()) showToast("JSON de cursos descargado.");
+    else showToast("No hay cursos para descargar.", "error");
+  });
+  document.getElementById("downloadCoursesPdfBtn")?.addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    const prev = btn.textContent;
+    btn.textContent = "Generando PDF…";
+    try {
+      if (await downloadAllCoursesPdf()) showToast("PDF de cursos descargado.");
+      else showToast("No hay cursos para descargar.", "error");
+    } catch {
+      showToast("Error al generar el PDF.", "error");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = prev;
+    }
+  });
   document.getElementById("importDataInput")?.addEventListener("change", importData);
   document.getElementById("resetSettingsBtn")?.addEventListener("click", resetSettings);
   document.getElementById("restoreDemoBtn")?.addEventListener("click", () => {
