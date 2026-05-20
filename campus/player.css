@@ -603,6 +603,24 @@
   color: var(--gold-light);
 }
 
+.pp-chip--preview {
+  border-color: rgba(126, 184, 218, 0.35);
+  color: #9ed4f5;
+}
+
+.pp-lesson-summary {
+  margin: 0 0 16px;
+  max-width: 720px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.pp-resource-lock {
+  font-size: 14px;
+  opacity: 0.5;
+}
+
 .pp-lesson-progress-line {
   height: 2px;
   border-radius: 999px;

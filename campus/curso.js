@@ -13,6 +13,9 @@ import {
   submitAssignment,
   submitExam,
   scoreExamAnswers,
+  hasSeenCourseWelcome,
+  markCourseWelcomeSeen,
+  canDownloadLessonResources,
 } from "../js/data.js";
 import { renderBlocksPreview, escapeHtml } from "../admin/editor/preview.js";
 import { showCampusDialog } from "./modal.js";
@@ -175,17 +178,29 @@ function saveNotes(path, text) {
   }
 }
 
-function extractResources(blocks = []) {
+function extractResources(blocks = [], item = null) {
   const types = { pdf: "📄", file: "📎", stl: "🦷", audio: "🎧", video: "🎬" };
   const labels = { pdf: "PDF", file: "Documento", stl: "Modelo STL", audio: "Audio", video: "Vídeo" };
-  return blocks
+  const downloadable = item ? canDownloadLessonResources(course, item) : true;
+  const fromBlocks = blocks
     .filter((b) => ["pdf", "file", "stl", "audio", "video"].includes(b.type) && b.url)
     .map((b) => ({
       label: b.label || b.name || b.caption || "Recurso",
       url: b.url,
       icon: types[b.type] || "📎",
       typeLabel: labels[b.type] || "Archivo",
+      downloadable,
     }));
+  const fromItem = (item?.resources || [])
+    .filter((r) => r.url)
+    .map((r) => ({
+      label: r.name || "Recurso",
+      url: r.url,
+      icon: "📎",
+      typeLabel: "Adjunto",
+      downloadable,
+    }));
+  return [...fromBlocks, ...fromItem];
 }
 
 function renderTopbar(row) {
@@ -242,7 +257,7 @@ function showPlayerToolsPanel() {
 
 function renderToolsPanel(row, item) {
   const tools = document.getElementById("playerTools");
-  const resources = extractResources(item.blocks || []);
+  const resources = extractResources(item.blocks || [], item);
   const analytics = getAnalytics();
   tools.innerHTML = renderToolsPanelPremium({
     row,
@@ -1027,6 +1042,18 @@ function getNextPath() {
   return getNextRow()?.path || null;
 }
 
+function showCourseWelcome() {
+  const msg = course.welcomeMessage?.trim();
+  if (!msg || hasSeenCourseWelcome(studentId, courseId)) return;
+  showCampusDialog({
+    title: course.title,
+    message: msg,
+    type: "info",
+    buttonLabel: "Empezar curso",
+    onClose: () => markCourseWelcomeSeen(studentId, courseId),
+  });
+}
+
 function renderAll() {
   saveLastLesson(studentId, courseId, activePath);
   renderSidebar();
@@ -1035,3 +1062,4 @@ function renderAll() {
 
 renderAll();
 bindThemeToggle();
+showCourseWelcome();

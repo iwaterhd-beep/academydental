@@ -236,7 +236,7 @@ export function renderSidebarPremium({
               <span class="pp-item-label">${escapeHtml(row.item.title)}</span>
               <span class="pp-item-sub">${meta.label}${dur ? ` · ${dur} min` : ""}</span>
             </span>
-            <span class="pp-item-state">${state === "done" ? "✓" : state === "pending" ? "◷" : state === "failed" ? "✗" : state === "locked" ? "🔒" : ""}</span>
+            <span class="pp-item-state">${state === "done" ? "✓" : state === "pending" ? "◷" : state === "failed" ? "✗" : state === "locked" ? "🔒" : row.item.isPreviewFree ? "👁" : ""}</span>
           </button>`;
           })
           .join("")}
@@ -307,8 +307,10 @@ export function renderLessonHero({ course, row, item, analytics, kindLabel, prev
           <span>${escapeHtml(moduleTitle)}</span>
         </nav>
         <h1 class="pp-lesson-title">${escapeHtml(item.title)}</h1>
+        ${item.summary ? `<p class="pp-lesson-summary">${escapeHtml(item.summary)}</p>` : ""}
         <div class="pp-lesson-chips">
           <span class="pp-chip">${escapeHtml(kindLabel(item))}</span>
+          ${item.isPreviewFree ? `<span class="pp-chip pp-chip--preview">Vista previa</span>` : ""}
           ${dur ? `<span class="pp-chip">⏱ ${dur} min</span>` : ""}
           <span class="pp-chip">${escapeHtml(course.instructor)}</span>
           <span class="pp-chip pp-chip--gold">Lección ${idx + 1} de ${total}</span>
@@ -477,7 +479,11 @@ export function renderToolsPanelPremium({
               </div>
               <div class="pp-resource-actions">
                 <button type="button" class="pp-resource-fav ${isFav ? "is-active" : ""}" data-fav="${rid}" title="Favorito">★</button>
-                <a href="${escapeHtml(r.url)}" class="pp-resource-dl" target="_blank" rel="noopener" download>↓</a>
+                ${
+                  r.downloadable !== false
+                    ? `<a href="${escapeHtml(r.url)}" class="pp-resource-dl" target="_blank" rel="noopener" download>↓</a>`
+                    : `<span class="pp-resource-lock" title="Descarga desactivada">🔒</span>`
+                }
               </div>
             </article>`;
           })

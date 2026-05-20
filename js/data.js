@@ -1004,7 +1004,40 @@ export function getStudentCourses(studentId) {
   if (!student) return [];
   return student.courseIds
     .map((id) => getCourse(id))
-    .filter((c) => c && c.status === "published");
+    .filter((c) => c && c.status === "published")
+    .sort((a, b) => Number(b.featured) - Number(a.featured) || a.title.localeCompare(b.title, "es"));
+}
+
+/** Fecha de matrícula en un curso (pago o alta del alumno). */
+export function getStudentCourseEnrollmentDate(studentId, courseId) {
+  const payment = getPayments().find((p) => p.studentId === studentId && p.courseId === courseId);
+  if (payment?.paidAt) return new Date(payment.paidAt);
+  const student = getStudent(studentId);
+  return student?.createdAt ? new Date(student.createdAt) : new Date();
+}
+
+function getModuleById(course, moduleId) {
+  return course.structure?.find((m) => m.id === moduleId) || null;
+}
+
+function isModuleDripUnlocked(course, moduleId, studentId) {
+  if (!course.settings?.dripContent || !moduleId) return true;
+  const mod = getModuleById(course, moduleId);
+  if (!mod?.unlockDays) return true;
+  const start = getStudentCourseEnrollmentDate(studentId, course.id);
+  const unlockAt = new Date(start);
+  unlockAt.setDate(unlockAt.getDate() + Number(mod.unlockDays));
+  return new Date() >= unlockAt;
+}
+
+export function hasSeenCourseWelcome(studentId, courseId) {
+  return (getStudentPreferences(studentId).seenWelcomeCourseIds || []).includes(courseId);
+}
+
+export function markCourseWelcomeSeen(studentId, courseId) {
+  const seen = new Set(getStudentPreferences(studentId).seenWelcomeCourseIds || []);
+  seen.add(courseId);
+  return saveStudentPreferences(studentId, { seenWelcomeCourseIds: [...seen] }).seenWelcomeCourseIds;
 }
 
 /** Lista ordenada de elementos del curso para el alumno */
@@ -1067,17 +1100,42 @@ export function getStudentCourseProgress(studentId, courseId) {
 }
 
 export function isCurriculumItemUnlocked(course, row, studentId) {
-  const mode = row.item.unlock?.mode || "sequential";
+  const item = row.item;
+  const mode = item.unlock?.mode || "sequential";
+
+  if (course.allowPreview !== false && item.kind === "lesson" && item.isPreviewFree) {
+    return true;
+  }
+
+  if (row.moduleId && !isModuleDripUnlocked(course, row.moduleId, studentId)) {
+    return false;
+  }
+
+  if (course.settings?.enforceLessonOrder === false) {
+    if (mode === "manual") return false;
+    if (mode === "date" && item.unlock?.date) {
+      return new Date(item.unlock.date) <= new Date();
+    }
+    if (mode === "open") return true;
+    return true;
+  }
+
   if (mode === "open") return true;
   if (mode === "manual") return false;
-  if (mode === "date" && row.item.unlock?.date) {
-    return new Date(row.item.unlock.date) <= new Date();
+  if (mode === "date" && item.unlock?.date) {
+    return new Date(item.unlock.date) <= new Date();
   }
   if (!course.settings?.sequentialUnlock && mode !== "sequential") return true;
   const curriculum = getCourseCurriculum(course);
   const idx = curriculum.findIndex((r) => r.path === row.path);
   if (idx <= 0) return true;
   return isItemCompleted(studentId, curriculum[idx - 1].path);
+}
+
+export function canDownloadLessonResources(course, item) {
+  if (course.settings?.restrictDownloads) return false;
+  if (item.kind === "lesson" && item.downloadEnabled === false) return false;
+  return true;
 }
 
 export function getStudents() {
@@ -1205,6 +1263,7 @@ export const DEFAULT_STUDENT_PREFS = {
   compactDashboard: false,
   seenNotificationIds: [],
   seenTaskIds: [],
+  seenWelcomeCourseIds: [],
 };
 
 export function getSeenNotificationIds(studentId) {

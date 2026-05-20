@@ -496,9 +496,10 @@ function renderCourseCard(c, featured = false) {
   if (!filtered) return "";
 
   return `
-    <article class="dash-course-card ${featured ? "dash-course-card--featured" : ""}">
+    <article class="dash-course-card ${featured || c.featured ? "dash-course-card--featured" : ""}">
       <a href="/campus/curso?id=${c.id}" class="dash-course-media" style="background-image:url('${escapeHtml(c.coverImage || "")}')">
         <div class="dash-course-media-overlay"></div>
+        ${c.featured ? `<span class="dash-course-badge">Destacado</span>` : ""}
         <div class="dash-course-progress-ring" style="--pct:${prog.percent}"><span>${prog.percent}%</span></div>
       </a>
       <div class="dash-course-body">
@@ -508,7 +509,15 @@ function renderCourseCard(c, featured = false) {
           <span>${c.durationHours}h</span>
         </div>
         <h3 class="dash-course-title">${escapeHtml(c.title)}</h3>
-        <p class="dash-course-sub">${escapeHtml(c.subtitle)}</p>
+        <p class="dash-course-sub">${escapeHtml(c.subtitle || c.shortDescription || "")}</p>
+        ${
+          c.objectives?.length
+            ? `<ul class="dash-course-objectives">${c.objectives
+                .slice(0, 2)
+                .map((o) => `<li>${escapeHtml(o)}</li>`)
+                .join("")}</ul>`
+            : ""
+        }
         <p class="dash-course-meta">Prof. ${escapeHtml(c.instructor)} · ${prog.completed}/${prog.total} completados</p>
         <p class="dash-course-last">↳ ${escapeHtml(lastLesson)}</p>
         <div class="dash-progress dash-progress--lg">
