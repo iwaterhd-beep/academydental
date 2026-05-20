@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <script src="/js/theme-init.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Comunidad — Vallodental Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/login.css" />
+  <link rel="stylesheet" href="/css/theme.css" />
+  <link rel="stylesheet" href="/admin/admin.css" />
+  <link rel="stylesheet" href="/admin/admin-premium.css" />
+  <link rel="stylesheet" href="/admin/admin-theme.css" />
+</head>
+<body class="admin-page admin-premium">
+
+  <aside class="admin-sidebar"></aside>
+
+  <main class="admin-main">
+    <header class="admin-header admin-header--row adm-legacy-header">
+      <div>
+        <p class="login-kicker">Comunicación</p>
+        <h2 class="login-title admin-page-title">Comunidad</h2>
+      </div>
+      <button type="button" class="admin-btn admin-btn--gold" id="newPostBtn">+ Nuevo anuncio</button>
+    </header>
+
+    <div class="admin-content" id="communityRoot"></div>
+  </main>
+
+  <dialog class="admin-modal adm-community-modal" id="postModal">
+    <form id="postForm" class="admin-modal-inner adm-community-form">
+      <div class="admin-modal-head">
+        <h3 class="admin-card-title" id="postModalTitle">Nuevo anuncio</h3>
+        <button type="button" class="admin-icon-btn" id="closePostModal" aria-label="Cerrar">×</button>
+      </div>
+      <input type="hidden" id="postId" />
+      <div class="adm-community-form-grid">
+        <label class="admin-field adm-community-field--wide">
+          <span class="login-label">Título</span>
+          <input class="adm-input" id="postTitle" required maxlength="120" />
+        </label>
+        <label class="admin-field adm-community-field--wide">
+          <span class="login-label">Contenido</span>
+          <textarea class="adm-textarea" id="postText" rows="5" required maxlength="800"></textarea>
+        </label>
+        <label class="admin-field">
+          <span class="login-label">Icono</span>
+          <select class="adm-select adm-select--full" id="postIcon"></select>
+        </label>
+        <label class="admin-field">
+          <span class="login-label">Audiencia</span>
+          <select class="adm-select adm-select--full" id="postCourse"></select>
+        </label>
+        <label class="adm-setting-row adm-setting-row--toggle adm-community-field--wide">
+          <div><span class="adm-setting-label">Fijar en la parte superior</span></div>
+          <input type="checkbox" class="adm-toggle-input" id="postPinned" />
+          <span class="adm-toggle" aria-hidden="true"></span>
+        </label>
+        <label class="adm-setting-row adm-setting-row--toggle adm-community-field--wide">
+          <div><span class="adm-setting-label">Publicado (visible en campus)</span></div>
+          <input type="checkbox" class="adm-toggle-input" id="postPublished" checked />
+          <span class="adm-toggle" aria-hidden="true"></span>
+        </label>
+      </div>
+      <div class="adm-community-preview" id="postPreview"></div>
+      <div class="admin-modal-actions">
+        <button type="button" class="admin-btn admin-btn--ghost" id="cancelPostModal">Cancelar</button>
+        <button type="submit" class="admin-btn admin-btn--gold">Guardar anuncio</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="/admin/comunidad.js"></script>
+</body>
+</html>

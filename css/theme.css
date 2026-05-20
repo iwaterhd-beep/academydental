@@ -1,0 +1,162 @@
+/* ——— Modo claro · Vallodental Academy ——— */
+
+html.light {
+  color-scheme: light;
+
+  --gold: #a8853e;
+  --gold-light: #8a6a32;
+  --gold-dim: #c4a058;
+  --dark: #f5f0e8;
+  --dark-2: #faf8f4;
+  --text-light: #1a1a1a;
+  --text-muted: #5c5c5c;
+  --border-dark: rgba(0, 0, 0, 0.08);
+
+  --adm-bg: #f5f0e8;
+  --adm-bg-end: #ebe4d8;
+  --adm-surface: hsla(0, 0%, 100%, 0.88);
+  --adm-surface-soft: hsla(0, 0%, 100%, 0.65);
+  --adm-border: rgba(0, 0, 0, 0.08);
+  --adm-border-gold: hsla(39, 46%, 61%, 0.28);
+  --adm-sidebar-bg: hsla(0, 0%, 100%, 0.78);
+  --adm-topbar-bg: hsla(0, 0%, 100%, 0.92);
+  --adm-nav-hover: hsla(39, 46%, 61%, 0.1);
+  --adm-nav-active: #f3ebda;
+  --adm-shadow: 0 18px 50px rgba(0, 0, 0, 0.08);
+  --adm-shadow-hover: 0 16px 36px rgba(0, 0, 0, 0.1);
+  --adm-input-bg: hsla(0, 0%, 100%, 0.95);
+  --adm-overlay: rgba(0, 0, 0, 0.35);
+}
+
+/* ——— Toggle ——— */
+.theme-toggle {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid var(--border-dark);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.theme-toggle:hover {
+  border-color: var(--adm-border-gold, rgba(201, 169, 110, 0.35));
+  color: var(--gold);
+  background: var(--adm-nav-hover, rgba(201, 169, 110, 0.08));
+}
+
+.theme-toggle--float {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 100;
+  background: var(--adm-surface, rgba(255, 255, 255, 0.06));
+  backdrop-filter: blur(12px);
+}
+
+html:not(.light) .theme-toggle--float {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.theme-icon--moon {
+  display: none;
+}
+
+html.light .theme-icon--sun {
+  display: none;
+}
+
+html.light .theme-icon--moon {
+  display: block;
+}
+
+/* ——— Login · modo claro (estilo admin vallodental) ——— */
+html.light body {
+  background: linear-gradient(160deg, var(--adm-bg) 0%, var(--adm-bg-end) 100%);
+  color: var(--text-light);
+}
+
+html.light .login-layout {
+  grid-template-columns: 1fr;
+  place-items: center;
+  padding: 80px 24px 48px;
+}
+
+html.light .login-visual {
+  display: none;
+}
+
+html.light .login-panel {
+  width: 100%;
+  max-width: 440px;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+html.light .login-panel-inner {
+  padding: 40px 36px 36px;
+  border-radius: 16px;
+  border: 1px solid hsl(40, 16%, 82%);
+  background: var(--adm-surface);
+  box-shadow: var(--adm-shadow);
+  backdrop-filter: blur(16px);
+}
+
+html.light .login-kicker {
+  color: var(--gold);
+}
+
+html.light .login-kicker::before {
+  background: var(--gold);
+}
+
+html.light .login-title {
+  color: var(--text-light);
+}
+
+html.light .login-label {
+  color: var(--text-muted);
+}
+
+html.light .login-input {
+  color: var(--text-light);
+  border-bottom-color: rgba(0, 0, 0, 0.12);
+}
+
+html.light .login-input::placeholder {
+  color: #aaa;
+}
+
+html.light .login-input:focus {
+  border-bottom-color: var(--gold);
+}
+
+html.light .login-btn {
+  color: #faf8f4;
+  background: linear-gradient(135deg, #a8853e, #8a6a32);
+}
+
+html.light .login-btn:hover {
+  background: linear-gradient(135deg, #c4a058, #a8853e);
+}
+
+html.light .login-hint {
+  color: var(--text-muted) !important;
+}
+
+html.light ::selection {
+  background: var(--gold);
+  color: #fff;
+}
+
+@media (max-width: 820px) {
+  html.light .login-layout {
+    padding: 72px 20px 40px;
+  }
+}

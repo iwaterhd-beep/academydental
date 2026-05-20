@@ -5,7 +5,7 @@
   <script src="/js/theme-init.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex" />
-  <title>Dashboard — Vallodental Academy</title>
+  <title>Mensajes — Vallodental Academy</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
@@ -19,16 +19,25 @@
 
   <aside class="admin-sidebar"></aside>
 
-  <main class="admin-main">
-    <header class="admin-header admin-header--row adm-legacy-header">
+  <main class="admin-main admin-main--messages">
+    <header class="admin-header">
       <div>
-        <p class="login-kicker">Resumen</p>
-        <h2 class="login-title admin-page-title">Dashboard</h2>
+        <p class="login-kicker">Comunicación</p>
+        <h2 class="login-title admin-page-title">Mensajes de alumnos</h2>
       </div>
     </header>
-    <div class="admin-content" id="dashboardRoot"></div>
+    <div class="admin-content admin-msg-layout">
+      <aside class="admin-msg-threads" id="threadList"></aside>
+      <section class="admin-msg-panel" id="msgPanel">
+        <div class="corr-detail-empty">
+          <p class="login-kicker">Bandeja</p>
+          <h3>Selecciona un alumno</h3>
+          <p class="admin-muted">Responde consultas sobre cursos, entregas y exámenes.</p>
+        </div>
+      </section>
+    </div>
   </main>
 
-  <script type="module" src="/admin/dashboard.js"></script>
+  <script type="module" src="/admin/mensajes.js"></script>
 </body>
 </html>

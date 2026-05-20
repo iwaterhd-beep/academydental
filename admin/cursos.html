@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+  <script src="/js/theme-init.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex" />
   <title>Cursos — Vallodental Academy</title>
@@ -9,28 +10,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/login.css" />
+  <link rel="stylesheet" href="/css/theme.css" />
   <link rel="stylesheet" href="/admin/admin.css" />
+  <link rel="stylesheet" href="/admin/admin-premium.css" />
+  <link rel="stylesheet" href="/admin/admin-theme.css" />
 </head>
-<body class="admin-page">
+<body class="admin-page admin-premium">
 
-  <aside class="admin-sidebar">
-    <div>
-      <p class="login-kicker">Panel</p>
-      <h1 class="admin-brand">Vallodental<br><em>Academy</em></h1>
-      <p class="admin-tag">Administración</p>
-      <nav class="admin-nav">
-        <a href="/admin/" class="admin-nav-link" data-nav="dashboard">Dashboard</a>
-        <a href="/admin/cursos" class="admin-nav-link" data-nav="cursos">Cursos</a>
-        <a href="/admin/alumnos" class="admin-nav-link" data-nav="alumnos">Alumnos</a>
-        <a href="/admin/progreso" class="admin-nav-link" data-nav="progreso">Progreso</a>
-        <a href="/admin/correcciones" class="admin-nav-link" data-nav="correcciones">Correcciones</a>
-      </nav>
-    </div>
-    <div class="admin-footer">
-      <p class="admin-user">cursos@admin.com</p>
-      <button type="button" class="login-btn admin-logout" id="logoutBtn">Cerrar sesión</button>
-    </div>
-  </aside>
+  <aside class="admin-sidebar"></aside>
 
   <main class="admin-main">
     <header class="admin-header admin-header--row">
@@ -48,7 +35,15 @@
 
   <script type="module">
     import { initAdminShell, showToast, confirmAction, escapeHtml } from "./shell.js";
-    import { getCourses, deleteCourse, duplicateCourse, formatPrice, STATUS_LABELS } from "../js/data.js";
+    import {
+      getCourses,
+      deleteCourse,
+      duplicateCourse,
+      toggleCourseStatus,
+      getCourseAdminStats,
+      formatPrice,
+      STATUS_LABELS,
+    } from "../js/data.js";
 
     initAdminShell("cursos");
 
@@ -58,29 +53,47 @@
       return `<span class="admin-badge admin-badge--${status}">${STATUS_LABELS[status] || status}</span>`;
     }
 
+    function stars(rating = 4.8) {
+      return "★".repeat(Math.round(rating)) + "☆".repeat(5 - Math.round(rating));
+    }
+
     function render() {
       const courses = getCourses();
       grid.innerHTML = courses.length
-        ? courses.map((c) => `
-          <article class="course-admin-card">
-            <div class="course-admin-cover" style="background-image:url('${c.coverImage || ""}')"></div>
+        ? courses
+            .map((c) => {
+              const stats = getCourseAdminStats(c.id);
+              return `
+          <article class="course-admin-card adm-course-card">
+            <div class="course-admin-cover adm-course-cover" style="background-image:url('${c.coverImage || ""}')">
+              <div class="adm-course-cover-overlay">${badge(c.status)}</div>
+            </div>
             <div class="course-admin-body">
-              <p class="login-kicker">${escapeHtml(c.category)} · ${escapeHtml(c.level)}</p>
+              <p class="login-kicker">${escapeHtml(c.category)} · ${escapeHtml(c.level || "General")}</p>
               <h3 class="admin-card-title">${escapeHtml(c.title)}</h3>
-              <p class="admin-muted">${escapeHtml(c.subtitle)}</p>
+              <p class="admin-muted adm-course-sub">${escapeHtml(c.subtitle)}</p>
+              <div class="adm-course-metrics">
+                <div><span>◉</span><strong>${stats.enrollments}</strong><em>alumnos</em></div>
+                <div><span>▣</span><strong>${stats.avgProgress}%</strong><em>progreso</em></div>
+                <div><span>€</span><strong>${formatPrice(stats.revenue)}</strong><em>ingresos</em></div>
+                <div><span class="adm-stars">${stars(4.7)}</span><em>valoración</em></div>
+              </div>
               <div class="course-admin-meta">
-                ${badge(c.status)}
                 <span>${formatPrice(c.price)}</span>
                 <span>${c.structure?.length || 0} módulos</span>
               </div>
-              <div class="course-admin-actions">
-                <a href="/admin/curso-editor?id=${c.id}" class="admin-btn admin-btn--gold">Editar curso</a>
+              <div class="course-admin-actions adm-course-actions">
+                <a href="/admin/curso-editor?id=${c.id}" class="admin-btn admin-btn--gold">Editar</a>
+                <button type="button" class="admin-btn admin-btn--ghost" data-toggle="${c.id}">${c.status === "published" ? "Ocultar" : "Publicar"}</button>
                 <button type="button" class="admin-btn admin-btn--ghost" data-dup="${c.id}">Duplicar</button>
+                <a href="/admin/progreso" class="admin-link-btn">Analytics</a>
                 <button type="button" class="admin-link-btn admin-link-btn--danger" data-del="${c.id}">Eliminar</button>
               </div>
             </div>
-          </article>`).join("")
-        : `<div class="admin-card admin-card--wide"><div class="admin-empty" style="padding:60px">No hay cursos. <a href="/admin/curso-editor?new=1">Crea el primero</a></div></div>`;
+          </article>`;
+            })
+            .join("")
+        : `<div class="admin-card admin-card--wide adm-empty-panel"><div class="admin-empty" style="padding:60px">No hay cursos. <a href="/admin/curso-editor?new=1">Crea el primero</a></div></div>`;
 
       grid.querySelectorAll("[data-del]").forEach((btn) => {
         btn.onclick = () => {
@@ -94,6 +107,15 @@
         btn.onclick = () => {
           const copy = duplicateCourse(btn.dataset.dup);
           if (copy) location.href = `/admin/curso-editor?id=${copy.id}`;
+        };
+      });
+      grid.querySelectorAll("[data-toggle]").forEach((btn) => {
+        btn.onclick = () => {
+          const updated = toggleCourseStatus(btn.dataset.toggle);
+          if (updated) {
+            showToast(updated.status === "published" ? "Curso publicado" : "Curso en borrador");
+            render();
+          }
         };
       });
     }

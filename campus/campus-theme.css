@@ -1,0 +1,209 @@
+/* ——— Campus alumno · modo claro ——— */
+
+html.light .campus-dash,
+html.light .campus-player-page {
+  background: linear-gradient(160deg, var(--adm-bg) 0%, var(--adm-bg-end) 100%);
+  color: var(--text-light);
+}
+
+html.light .campus-player-page::before {
+  background:
+    radial-gradient(ellipse 60% 40% at 85% 10%, hsla(39, 46%, 61%, 0.12), transparent),
+    radial-gradient(ellipse 50% 35% at 10% 90%, hsla(39, 46%, 61%, 0.08), transparent);
+}
+
+html.light .dash-sidebar {
+  border-right-color: var(--adm-border);
+  background: var(--adm-sidebar-bg);
+  backdrop-filter: blur(20px);
+}
+
+html.light .dash-logo {
+  color: var(--text-light);
+}
+
+html.light .dash-profile,
+html.light .dash-nav-overall {
+  background: var(--adm-surface-soft);
+  border-color: var(--adm-border);
+}
+
+html.light .dash-nav-item {
+  color: var(--text-muted);
+}
+
+html.light .dash-nav-item:hover {
+  color: #2a2a2a;
+  background: var(--adm-nav-hover);
+}
+
+html.light .dash-nav-item.is-active {
+  color: #1a1a1a;
+  background: var(--adm-nav-active);
+}
+
+html.light .dash-sidebar-foot {
+  border-top-color: var(--adm-border);
+}
+
+html.light .dash-topbar,
+html.light .player-topbar {
+  border-bottom-color: var(--adm-border);
+  background: var(--adm-topbar-bg);
+}
+
+html.light .dash-search {
+  border-color: var(--adm-border);
+  background: var(--adm-surface-soft);
+}
+
+html.light .dash-search input {
+  color: var(--text-light);
+}
+
+html.light .dash-week-pill {
+  border-color: var(--adm-border);
+  background: var(--adm-surface-soft);
+  color: var(--text-muted);
+}
+
+html.light .dash-week-pill strong {
+  color: var(--gold);
+}
+
+html.light .dash-icon-btn,
+html.light .theme-toggle {
+  border-color: var(--adm-border);
+  background: var(--adm-surface-soft);
+  color: var(--text-muted);
+}
+
+html.light .dash-icon-btn:hover,
+html.light .theme-toggle:hover {
+  border-color: var(--adm-border-gold);
+  color: var(--gold);
+}
+
+html.light .dash-topbar-user {
+  border-color: var(--adm-border);
+  background: var(--adm-surface-soft);
+}
+
+html.light .dash-hero {
+  border-color: var(--adm-border);
+  background: linear-gradient(135deg, hsla(39, 46%, 61%, 0.12) 0%, hsla(0, 0%, 100%, 0.95) 55%, #f8f5ef);
+}
+
+html.light .dash-hero-glow {
+  background: radial-gradient(circle, hsla(39, 46%, 61%, 0.18), transparent 65%);
+}
+
+html.light .dash-stat-card,
+html.light .dash-continue-card,
+html.light .dash-widget,
+html.light .dash-course-card,
+html.light .dash-task-card,
+html.light .dash-cert-card,
+html.light .dash-comm-card,
+html.light .dash-goal-card,
+html.light .dash-settings-block,
+html.light .dash-chat-layout,
+html.light .dash-cal-wrap,
+html.light .dash-empty-state {
+  border-color: var(--adm-border);
+  background: var(--adm-surface);
+  box-shadow: var(--adm-shadow);
+}
+
+html.light .dash-stat-card:hover,
+html.light .dash-course-card:hover {
+  border-color: var(--adm-border-gold);
+  box-shadow: var(--adm-shadow-hover);
+}
+
+html.light .dash-stat-value {
+  color: var(--gold);
+}
+
+html.light .dash-notif-panel {
+  border-color: var(--adm-border);
+  background: var(--adm-surface);
+  box-shadow: var(--adm-shadow);
+}
+
+html.light .dash-notif-item {
+  border-bottom-color: var(--adm-border);
+}
+
+html.light .dash-notif-item:hover {
+  background: var(--adm-nav-hover);
+}
+
+html.light .dash-community-strip article,
+html.light .dash-feed li {
+  border-color: var(--adm-border);
+  background: var(--adm-surface-soft);
+}
+
+html.light .dash-overlay {
+  background: var(--adm-overlay);
+}
+
+html.light .player-sidebar {
+  border-right-color: var(--adm-border);
+  background: var(--adm-sidebar-bg);
+}
+
+html.light .player-main,
+html.light .player-stage {
+  background: transparent;
+}
+
+html.light .pp-lesson-hero,
+html.light .campus-content-inner,
+html.light .pp-tools-panel,
+html.light .player-tools {
+  border-color: var(--adm-border);
+  background: var(--adm-surface);
+}
+
+html.light .pp-sidebar-item {
+  color: var(--text-muted);
+}
+
+html.light .pp-sidebar-item:hover,
+html.light .pp-sidebar-item.is-active {
+  background: var(--adm-nav-active);
+  color: var(--text-light);
+}
+
+html.light .pp-interaction-bar,
+html.light .pp-video-wrap {
+  border-color: var(--adm-border);
+  background: var(--adm-surface-soft);
+}
+
+html.light .campus-btn--ghost {
+  border-color: var(--adm-border);
+  color: var(--text-muted);
+}
+
+html.light .campus-btn--ghost:hover {
+  border-color: var(--adm-border-gold);
+  color: var(--gold);
+}
+
+/* Toggle en barra campus (modo oscuro) */
+.campus-dash .theme-toggle,
+.campus-player-page .theme-toggle {
+  flex-shrink: 0;
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.campus-dash .theme-toggle:hover,
+.campus-player-page .theme-toggle:hover {
+  border-color: rgba(201, 169, 110, 0.35);
+  color: var(--gold-light);
+  background: rgba(201, 169, 110, 0.08);
+}

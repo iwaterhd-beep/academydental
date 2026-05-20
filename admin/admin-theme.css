@@ -1,0 +1,298 @@
+/* ——— Admin · modo claro ——— */
+
+html.light body.admin-page,
+html.light body.admin-premium {
+  background: linear-gradient(160deg, var(--adm-bg) 0%, var(--adm-bg-end) 100%);
+  color: var(--text-light);
+}
+
+html.light body.admin-premium::before {
+  background:
+    radial-gradient(ellipse 70% 45% at 10% -5%, hsla(39, 46%, 61%, 0.14), transparent),
+    radial-gradient(ellipse 50% 40% at 95% 100%, hsla(39, 46%, 61%, 0.08), transparent);
+}
+
+html.light .admin-sidebar,
+html.light .adm-sidebar {
+  border-right-color: var(--adm-border);
+  background: var(--adm-sidebar-bg);
+  backdrop-filter: blur(20px);
+}
+
+html.light .adm-sidebar-glow {
+  background: radial-gradient(circle, hsla(39, 46%, 61%, 0.18), transparent 70%);
+}
+
+html.light .adm-logo-text,
+html.light .admin-brand {
+  color: var(--text-light);
+}
+
+html.light .adm-profile {
+  background: var(--adm-surface-soft);
+  border-color: var(--adm-border);
+}
+
+html.light .adm-profile-name {
+  color: var(--text-light);
+}
+
+html.light .adm-platform-progress {
+  background: var(--adm-surface-soft);
+  border-color: var(--adm-border);
+}
+
+html.light .adm-platform-bar {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+html.light .adm-nav-link,
+html.light .admin-nav-link {
+  color: var(--text-muted);
+}
+
+html.light .adm-nav-link:hover,
+html.light .admin-nav-link:hover {
+  color: #2a2a2a;
+  background: var(--adm-nav-hover);
+}
+
+html.light .adm-nav-link.is-active,
+html.light .admin-nav-link.is-active {
+  color: #1a1a1a;
+  background: var(--adm-nav-active);
+  border-color: hsla(39, 46%, 61%, 0.35);
+}
+
+html.light .adm-sidebar-foot {
+  border-top-color: var(--adm-border);
+}
+
+html.light .adm-logout,
+html.light .admin-logout {
+  border-color: var(--adm-border);
+  color: var(--text-muted);
+}
+
+html.light .adm-logout:hover {
+  border-color: var(--adm-border-gold);
+  color: var(--gold);
+}
+
+html.light .adm-topbar {
+  border-bottom-color: var(--adm-border);
+  background: var(--adm-topbar-bg);
+  backdrop-filter: blur(20px);
+}
+
+html.light .adm-menu-btn,
+html.light .adm-icon-btn,
+html.light .theme-toggle {
+  border-color: var(--adm-border);
+  background: var(--adm-surface-soft);
+  color: var(--text-muted);
+}
+
+html.light .adm-menu-btn:hover,
+html.light .adm-icon-btn:hover {
+  border-color: var(--adm-border-gold);
+  color: var(--gold);
+}
+
+html.light .adm-topbar-search {
+  border-color: var(--adm-border);
+  background: var(--adm-surface-soft);
+}
+
+html.light .adm-topbar-search input {
+  color: var(--text-light);
+}
+
+html.light .adm-search-kbd {
+  border-color: var(--adm-border);
+  color: var(--text-muted);
+}
+
+html.light .adm-topbar-title,
+html.light .admin-page-title,
+html.light .login-title {
+  color: var(--text-light);
+}
+
+html.light .adm-hero {
+  border-color: var(--adm-border);
+  background: linear-gradient(135deg, hsla(39, 46%, 61%, 0.12) 0%, hsla(0, 0%, 100%, 0.95) 52%, #f8f5ef);
+}
+
+html.light .adm-hero-glow {
+  background: radial-gradient(circle, hsla(39, 46%, 61%, 0.2), transparent 65%);
+}
+
+html.light .adm-stat-card,
+html.light .adm-panel,
+html.light .admin-card,
+html.light .admin-stat,
+html.light .admin-panel {
+  border-color: var(--adm-border);
+  background: var(--adm-surface);
+  box-shadow: var(--adm-shadow);
+}
+
+html.light .adm-stat-card:hover {
+  border-color: var(--adm-border-gold);
+  box-shadow: var(--adm-shadow-hover);
+}
+
+html.light .adm-stat-value {
+  color: var(--gold);
+}
+
+html.light .admin-header {
+  border-bottom-color: var(--adm-border);
+}
+
+html.light .admin-table-wrap,
+html.light .admin-modal,
+html.light .admin-drawer {
+  border-color: var(--adm-border);
+  background: var(--adm-surface);
+}
+
+html.light .admin-table th {
+  color: var(--text-muted);
+  border-bottom-color: var(--adm-border);
+}
+
+html.light .admin-table td {
+  border-bottom-color: var(--adm-border);
+  color: var(--text-light);
+}
+
+html.light .admin-table tr:hover td {
+  background: var(--adm-nav-hover);
+}
+
+html.light .admin-input,
+html.light .admin-select,
+html.light .admin-textarea,
+html.light .admin-field input,
+html.light .admin-field select,
+html.light .admin-field textarea {
+  border-color: hsl(40, 16%, 82%);
+  background: var(--adm-input-bg);
+  color: var(--text-light);
+}
+
+html.light .admin-input:focus,
+html.light .admin-select:focus,
+html.light .admin-textarea:focus {
+  border-color: var(--gold);
+}
+
+html.light .admin-btn--ghost {
+  border-color: var(--adm-border);
+  color: var(--text-muted);
+}
+
+html.light .admin-btn--ghost:hover {
+  border-color: var(--adm-border-gold);
+  color: var(--gold);
+}
+
+html.light .admin-tag,
+html.light .admin-muted,
+html.light .admin-user,
+html.light .adm-stat-sub,
+html.light .adm-stat-label {
+  color: var(--text-muted);
+}
+
+html.light .admin-badge,
+html.light .admin-pill {
+  background: var(--adm-nav-active);
+  color: var(--gold);
+  border-color: var(--adm-border-gold);
+}
+
+html.light .admin-toast {
+  background: var(--adm-surface);
+  border-color: var(--adm-border);
+  color: var(--text-light);
+  box-shadow: var(--adm-shadow);
+}
+
+html.light .adm-overlay {
+  background: var(--adm-overlay);
+}
+
+html.light .admin-progress-bar {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+html.light .config-section,
+html.light .adm-config-block {
+  border-color: var(--adm-border);
+  background: var(--adm-surface);
+}
+
+html.light .chat-panel,
+html.light .chat-list,
+html.light .chat-thread {
+  border-color: var(--adm-border);
+  background: var(--adm-surface);
+}
+
+html.light .chat-bubble--teacher {
+  background: var(--adm-nav-active);
+  color: var(--text-light);
+}
+
+html.light .chat-bubble--student {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--text-light);
+}
+
+/* ——— Constructor de curso ——— */
+html.light .editor-page {
+  background: linear-gradient(160deg, var(--adm-bg) 0%, var(--adm-bg-end) 100%);
+  color: var(--text-light);
+}
+
+html.light .editor-topbar,
+html.light .editor-sidebar,
+html.light .editor-inspector {
+  border-color: var(--adm-border);
+  background: var(--adm-topbar-bg);
+}
+
+html.light .editor-canvas {
+  background: var(--adm-surface-soft);
+}
+
+html.light .editor-block,
+html.light .editor-topic,
+html.light .editor-module {
+  border-color: var(--adm-border);
+  background: var(--adm-surface);
+}
+
+html.light .editor-block:hover,
+html.light .editor-topic:hover {
+  border-color: var(--adm-border-gold);
+}
+
+html.light .editor-toolbar-btn {
+  border-color: var(--adm-border);
+  background: var(--adm-surface-soft);
+  color: var(--text-muted);
+}
+
+html.light .editor-toolbar-btn:hover {
+  color: var(--gold);
+  border-color: var(--adm-border-gold);
+}
+
+html.light .preview-frame {
+  border-color: var(--adm-border);
+  background: #fff;
+}

@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+  <script src="/js/theme-init.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex" />
   <title>Mi campus — Vallodental Academy</title>
@@ -9,26 +10,54 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/login.css" />
+  <link rel="stylesheet" href="/css/theme.css" />
   <link rel="stylesheet" href="/campus/campus.css" />
+  <link rel="stylesheet" href="/campus/dashboard.css" />
+  <link rel="stylesheet" href="/campus/campus-theme.css" />
 </head>
-<body class="campus-page">
+<body class="campus-dash">
 
-  <header class="campus-header">
-    <a href="/campus/" class="campus-brand">Vallodental <em>Academy</em></a>
-    <div class="campus-header-actions">
-      <span class="campus-user" id="campusUser"></span>
-      <button type="button" class="campus-btn campus-btn--ghost" id="logoutBtn">Salir</button>
+  <aside class="dash-sidebar" id="dashSidebar">
+    <a href="/campus/" class="dash-logo">Vallodental <em>Academy</em></a>
+
+    <div class="dash-profile" id="dashProfile"></div>
+
+    <div class="dash-nav-overall" id="dashOverall"></div>
+
+    <nav class="dash-nav" id="dashNav" aria-label="Campus"></nav>
+
+    <div class="dash-sidebar-foot">
+      <button type="button" class="dash-nav-item dash-nav-item--logout" id="logoutBtn">
+        <span class="dash-nav-icon">↩</span>
+        <span>Cerrar sesión</span>
+      </button>
     </div>
-  </header>
+  </aside>
 
-  <main class="campus-main">
-    <section class="campus-hero">
-      <p class="login-kicker">Campus del alumno</p>
-      <h2>Tus <em>cursos</em></h2>
-      <p class="admin-muted">Continúa tu formación donde lo dejaste.</p>
-    </section>
-    <div class="campus-grid" id="coursesGrid"></div>
-  </main>
+  <div class="dash-shell">
+    <header class="dash-topbar">
+      <button type="button" class="dash-menu-btn" id="menuBtn" aria-label="Menú">☰</button>
+      <div class="dash-search">
+        <span class="dash-search-icon">⌕</span>
+        <input type="search" id="dashSearch" placeholder="Buscar cursos, lecciones, tareas…" autocomplete="off" />
+      </div>
+      <button type="button" class="theme-toggle" data-theme-toggle aria-label="Activar modo claro">
+        <svg class="theme-icon theme-icon--sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+        <svg class="theme-icon theme-icon--moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
+      </button>
+      <div class="dash-topbar-actions">
+        <div class="dash-week-pill" id="dashWeekPill"></div>
+        <button type="button" class="dash-icon-btn" id="notifBtn" title="Notificaciones">🔔<span class="dash-badge" id="notifBadge" hidden></span></button>
+        <div class="dash-notif-wrap" id="notifWrap"></div>
+        <button type="button" class="dash-icon-btn" title="Mensajes" data-route="mensajes">✉</button>
+        <div class="dash-topbar-user" id="topbarUser"></div>
+      </div>
+    </header>
+
+    <main class="dash-main" id="dashMain"></main>
+  </div>
+
+  <div class="dash-overlay" id="dashOverlay"></div>
 
   <script type="module" src="/campus/campus.js"></script>
 </body>

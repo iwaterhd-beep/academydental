@@ -1,12 +1,12 @@
 import { requireAdmin, logoutAdmin } from "../js/auth.js";
+import { mountAdminLayout } from "./admin-layout.js";
 
 export function initAdminShell(page) {
   if (!requireAdmin()) throw new Error("unauthorized");
-
-  document.querySelectorAll("[data-nav]").forEach((link) => {
+  mountAdminLayout(page);
+  document.querySelectorAll(".adm-nav-link[data-nav]").forEach((link) => {
     link.classList.toggle("is-active", link.dataset.nav === page);
   });
-
   const logoutBtn = document.getElementById("logoutBtn");
   if (logoutBtn) logoutBtn.addEventListener("click", logoutAdmin);
 }

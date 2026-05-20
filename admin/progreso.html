@@ -2,60 +2,63 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+  <script src="/js/theme-init.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex" />
-  <title>Progreso — Vallodental Academy</title>
+  <title>Analíticas — Vallodental Academy</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/login.css" />
+  <link rel="stylesheet" href="/css/theme.css" />
   <link rel="stylesheet" href="/admin/admin.css" />
+  <link rel="stylesheet" href="/admin/admin-premium.css" />
+  <link rel="stylesheet" href="/admin/admin-theme.css" />
 </head>
-<body class="admin-page">
+<body class="admin-page admin-premium">
 
-  <aside class="admin-sidebar">
-    <div>
-      <p class="login-kicker">Panel</p>
-      <h1 class="admin-brand">Vallodental<br><em>Academy</em></h1>
-      <p class="admin-tag">Administración</p>
-      <nav class="admin-nav">
-        <a href="/admin/" class="admin-nav-link" data-nav="dashboard">Dashboard</a>
-        <a href="/admin/cursos" class="admin-nav-link" data-nav="cursos">Cursos</a>
-        <a href="/admin/alumnos" class="admin-nav-link" data-nav="alumnos">Alumnos</a>
-        <a href="/admin/progreso" class="admin-nav-link" data-nav="progreso">Progreso</a>
-        <a href="/admin/correcciones" class="admin-nav-link" data-nav="correcciones">Correcciones</a>
-      </nav>
-    </div>
-    <div class="admin-footer">
-      <p class="admin-user">cursos@admin.com</p>
-      <button type="button" class="login-btn admin-logout" id="logoutBtn">Cerrar sesión</button>
-    </div>
-  </aside>
+  <aside class="admin-sidebar"></aside>
 
   <main class="admin-main">
-    <header class="admin-header admin-header--row">
+    <header class="admin-header admin-header--row adm-legacy-header">
       <div>
-        <p class="login-kicker">Seguimiento</p>
+        <p class="login-kicker">Analíticas</p>
         <h2 class="login-title admin-page-title">Progreso alumnos</h2>
       </div>
-      <select class="editor-input" id="courseFilter" style="max-width:280px"></select>
     </header>
 
     <div class="admin-content">
-      <div class="admin-card admin-card--wide">
-        <div class="admin-table-wrap">
-          <table class="admin-table">
-            <thead>
-              <tr>
-                <th>Alumno</th>
-                <th>Progreso</th>
-                <th>Lecciones</th>
-                <th>Tiempo vídeo</th>
-              </tr>
-            </thead>
-            <tbody id="progressBody"></tbody>
-          </table>
+      <div class="adm-panel-head adm-page-toolbar">
+        <div>
+          <p class="login-kicker">Curso</p>
+          <h3 class="adm-panel-title" style="margin:0">Detalle por matrícula</h3>
         </div>
+        <select class="adm-select" id="courseFilter"></select>
+      </div>
+
+      <div class="adm-stat-grid adm-stat-grid--compact" id="analyticsStats"></div>
+
+      <div class="adm-analytics-grid">
+        <section class="adm-panel">
+          <p class="login-kicker">Distribución</p>
+          <h3 class="adm-panel-title">Progreso por alumno</h3>
+          <div class="adm-bar-chart" id="progressChart"></div>
+        </section>
+        <section class="adm-panel adm-panel--wide">
+          <div class="admin-table-wrap adm-table-premium">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Alumno</th>
+                  <th>Progreso</th>
+                  <th>Lecciones</th>
+                  <th>Tiempo vídeo</th>
+                </tr>
+              </thead>
+              <tbody id="progressBody"></tbody>
+            </table>
+          </div>
+        </section>
       </div>
     </div>
   </main>
@@ -63,30 +66,95 @@
   <script type="module">
     import { initAdminShell } from "./shell.js";
     import { getCourses, getCourseProgressSummary } from "../js/data.js";
+    import { miniBars } from "./admin-layout.js";
 
     initAdminShell("progreso");
 
     const filter = document.getElementById("courseFilter");
     const tbody = document.getElementById("progressBody");
+    const statsEl = document.getElementById("analyticsStats");
+    const chartEl = document.getElementById("progressChart");
     const courses = getCourses();
 
-    filter.innerHTML = courses.map((c, i) => `<option value="${c.id}" ${i === 0 ? "selected" : ""}>${c.title}</option>`).join("");
+    filter.innerHTML = courses.length
+      ? courses.map((c, i) => `<option value="${c.id}" ${i === 0 ? "selected" : ""}>${c.title}</option>`)
+      : `<option value="">Sin cursos</option>`;
 
-    function render() {
-      const courseId = filter.value;
-      const rows = getCourseProgressSummary(courseId);
+    function renderStats(rows) {
+      if (!rows.length) {
+        statsEl.innerHTML = "";
+        return;
+      }
+      const avg = Math.round(rows.reduce((a, r) => a + r.percent, 0) / rows.length);
+      const watchMin = Math.round(rows.reduce((a, r) => a + r.watchTime, 0) / 60);
+      const completed = rows.filter((r) => r.percent >= 100).length;
+      const active = rows.filter((r) => r.percent > 0 && r.percent < 100).length;
+      const cards = [
+        { icon: "▣", label: "Finalización media", value: `${avg}%`, trend: avg >= 70 ? "Alto" : "Mejorable" },
+        { icon: "◉", label: "Alumnos activos", value: active, trend: `${rows.length} total` },
+        { icon: "✓", label: "Completados", value: completed, trend: completed ? "Certificables" : "En curso" },
+        { icon: "◷", label: "Tiempo vídeo", value: `${watchMin}m`, trend: "Consumo total" },
+      ];
+      statsEl.innerHTML = cards
+        .map(
+          (c) => `
+        <article class="adm-stat-card adm-stat-card--compact">
+          <div class="adm-stat-head"><span class="adm-stat-icon">${c.icon}</span><span class="adm-stat-trend">${c.trend}</span></div>
+          <p class="adm-stat-label">${c.label}</p>
+          <p class="adm-stat-value adm-stat-value--text">${c.value}</p>
+          <div class="adm-spark">${miniBars(c.value.length + 20, 5)}</div>
+        </article>`
+        )
+        .join("");
+    }
+
+    function renderChart(rows) {
+      if (!rows.length) {
+        chartEl.innerHTML = `<p class="admin-empty">Sin datos de progreso.</p>`;
+        return;
+      }
+      chartEl.innerHTML = rows
+        .map(
+          ({ student, percent }) => `
+        <div class="adm-bar-row">
+          <span class="adm-bar-label">${student.name.split(" ")[0]}</span>
+          <div class="adm-bar-track"><div class="adm-bar-fill" style="width:${percent}%"></div></div>
+          <span class="adm-bar-val">${percent}%</span>
+        </div>`
+        )
+        .join("");
+    }
+
+    function renderTable(rows) {
       tbody.innerHTML = rows.length
-        ? rows.map(({ student, percent, completed, totalLessons, watchTime }) => `
+        ? rows
+            .map(
+              ({ student, percent, completed, totalLessons, watchTime }) => `
           <tr>
-            <td><strong>${student.name}</strong><br><span class="admin-muted">${student.email}</span></td>
-            <td style="min-width:180px">
+            <td>
+              <div class="adm-student-cell">
+                <span class="adm-avatar">${student.name.charAt(0)}</span>
+                <div><strong>${student.name}</strong><span class="admin-muted">${student.email}</span></div>
+              </div>
+            </td>
+            <td class="adm-progress-cell">
               <span>${percent}%</span>
-              <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${percent}%"></div></div>
+              <div class="progress-bar-wrap adm-progress-bar"><div class="progress-bar-fill" style="width:${percent}%"></div></div>
             </td>
             <td>${completed} / ${totalLessons}</td>
             <td>${Math.round(watchTime / 60)} min</td>
-          </tr>`).join("")
+          </tr>`
+            )
+            .join("")
         : `<tr><td colspan="4" class="admin-empty">No hay alumnos matriculados en este curso.</td></tr>`;
+    }
+
+    function render() {
+      const courseId = filter.value;
+      const rows = courseId ? getCourseProgressSummary(courseId) || [] : [];
+      renderStats(rows);
+      renderChart(rows);
+      renderTable(rows);
     }
 
     filter.onchange = render;

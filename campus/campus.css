@@ -312,20 +312,30 @@
   margin-bottom: 8px;
 }
 
+.campus-curriculum-item.is-failed .campus-curriculum-label {
+  color: #d4a09a;
+}
+
 .campus-exam-form {
   margin-top: 24px;
 }
 
 .campus-exam-q {
-  margin-bottom: 28px;
-  padding-bottom: 28px;
+  margin: 0 0 28px;
+  padding: 0 0 28px;
+  border: none;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  min-width: 0;
 }
 
 .campus-exam-q legend {
-  font-size: 15px;
+  display: block;
+  width: 100%;
+  padding: 0;
   margin-bottom: 12px;
+  font-size: 15px;
   line-height: 1.5;
+  color: var(--text-light);
 }
 
 .campus-exam-q label {
@@ -342,6 +352,11 @@
   color: var(--text-light);
 }
 
+.campus-exam-result-wrap {
+  margin-top: 8px;
+}
+
+.campus-exam-result-wrap.is-pass .campus-exam-result,
 .campus-exam-result {
   margin-top: 24px;
   padding: 24px;
@@ -552,6 +567,271 @@
   color: var(--text-muted);
   line-height: 1.6;
   white-space: pre-wrap;
+}
+
+.campus-upload-zone {
+  margin-top: 24px;
+  padding: 32px 24px;
+  border-radius: 16px;
+  border: 1px dashed rgba(201, 169, 110, 0.35);
+  background: rgba(255, 255, 255, 0.02);
+  text-align: center;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.campus-upload-zone.is-dragover,
+.campus-upload-zone.has-files {
+  border-color: rgba(201, 169, 110, 0.6);
+  background: rgba(201, 169, 110, 0.06);
+}
+
+.campus-upload-icon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: var(--gold-light);
+  border: 1px solid rgba(201, 169, 110, 0.3);
+  background: rgba(201, 169, 110, 0.08);
+}
+
+.campus-upload-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--text-light);
+  margin-bottom: 8px;
+}
+
+.campus-upload-hint {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin-bottom: 18px;
+}
+
+.campus-upload-btn {
+  min-width: 180px;
+}
+
+.campus-upload-list {
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 0;
+  text-align: left;
+}
+
+.campus-upload-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.campus-upload-item-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.campus-upload-item-name {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-light);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.campus-upload-item-size {
+  font-size: 12px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.campus-upload-remove {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.campus-upload-remove:hover {
+  background: rgba(212, 132, 122, 0.2);
+  color: #e8a9a0;
+}
+
+.campus-submitted-files-wrap {
+  margin-top: 18px;
+}
+
+.campus-submitted-files {
+  display: grid;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.campus-file-item {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.campus-file-item img {
+  display: block;
+  width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  background: #111;
+}
+
+.campus-file-item video {
+  display: block;
+  width: 100%;
+  max-height: 280px;
+  background: #111;
+}
+
+.campus-file-item iframe {
+  display: block;
+  width: 100%;
+  height: 320px;
+  border: none;
+  background: #111;
+}
+
+.campus-file-meta,
+.campus-file-link {
+  display: block;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.campus-file-link {
+  color: var(--gold-light);
+  text-decoration: none;
+}
+
+.campus-file-link:hover {
+  text-decoration: underline;
+}
+
+.campus-file-item--doc {
+  padding: 4px 0;
+}
+
+/* ─── Modal premium ─── */
+.campus-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(4, 4, 4, 0.72);
+  backdrop-filter: blur(12px);
+  opacity: 0;
+  transition: opacity 0.28s var(--ease);
+}
+
+.campus-modal-overlay.is-visible {
+  opacity: 1;
+}
+
+.campus-modal {
+  position: relative;
+  width: min(440px, 100%);
+  padding: 40px 36px 32px;
+  border-radius: 20px;
+  border: 1px solid rgba(201, 169, 110, 0.22);
+  background: linear-gradient(165deg, rgba(22, 22, 22, 0.98) 0%, rgba(10, 10, 10, 0.98) 100%);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  text-align: center;
+  transform: translateY(16px) scale(0.97);
+  transition: transform 0.32s var(--ease);
+}
+
+.campus-modal-overlay.is-visible .campus-modal {
+  transform: translateY(0) scale(1);
+}
+
+.campus-modal-glow {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  border-radius: 999px;
+}
+
+.campus-modal-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 500;
+  border: 1px solid rgba(201, 169, 110, 0.3);
+  background: rgba(201, 169, 110, 0.1);
+  color: var(--gold-light);
+}
+
+.campus-modal--pending .campus-modal-icon {
+  border-color: rgba(126, 184, 218, 0.35);
+  background: rgba(126, 184, 218, 0.1);
+  color: #a8d4ef;
+}
+
+.campus-modal--error .campus-modal-icon {
+  border-color: rgba(212, 132, 122, 0.4);
+  background: rgba(212, 132, 122, 0.1);
+  color: #e8a9a0;
+}
+
+.campus-modal-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 300;
+  margin: 8px 0 14px;
+  line-height: 1.2;
+  color: var(--text-light);
+}
+
+.campus-modal-message {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--text-muted);
+  margin-bottom: 28px;
+}
+
+.campus-modal-message strong {
+  color: var(--gold-light);
+  font-weight: 500;
+}
+
+.campus-modal-btn {
+  min-width: 160px;
 }
 
 @media (max-width: 900px) {

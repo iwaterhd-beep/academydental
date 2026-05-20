@@ -276,11 +276,12 @@ export function getSampleCourseRaw() {
                 assignment: {
                   id: "as2",
                   title: "Entrega del plan de caracterización",
-                  instructions: "Sube un PDF o imagen con tu esquema de estratificación por tercios.",
+                  instructions: "Sube un PDF, imagen o vídeo con tu esquema de estratificación por tercios.",
                   dueDate: "",
                   maxScore: 100,
                   allowFiles: true,
-                  fileTypes: ["pdf", "jpg", "png"],
+                  fileTypes: ["pdf", "jpg", "jpeg", "png", "webp", "mp4", "webm", "mov", "stl", "zip"],
+                  questions: [],
                 },
               },
               {

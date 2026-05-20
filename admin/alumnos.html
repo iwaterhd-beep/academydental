@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+  <script src="/js/theme-init.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex" />
   <title>Alumnos — Vallodental Academy</title>
@@ -9,28 +10,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/login.css" />
+  <link rel="stylesheet" href="/css/theme.css" />
   <link rel="stylesheet" href="/admin/admin.css" />
+  <link rel="stylesheet" href="/admin/admin-premium.css" />
+  <link rel="stylesheet" href="/admin/admin-theme.css" />
 </head>
-<body class="admin-page">
+<body class="admin-page admin-premium">
 
-  <aside class="admin-sidebar">
-    <div>
-      <p class="login-kicker">Panel</p>
-      <h1 class="admin-brand">Vallodental<br><em>Academy</em></h1>
-      <p class="admin-tag">Administración</p>
-      <nav class="admin-nav">
-        <a href="/admin/" class="admin-nav-link" data-nav="dashboard">Dashboard</a>
-        <a href="/admin/cursos" class="admin-nav-link" data-nav="cursos">Cursos</a>
-        <a href="/admin/alumnos" class="admin-nav-link" data-nav="alumnos">Alumnos</a>
-        <a href="/admin/progreso" class="admin-nav-link" data-nav="progreso">Progreso</a>
-        <a href="/admin/correcciones" class="admin-nav-link" data-nav="correcciones">Correcciones</a>
-      </nav>
-    </div>
-    <div class="admin-footer">
-      <p class="admin-user">cursos@admin.com</p>
-      <button type="button" class="login-btn admin-logout" id="logoutBtn">Cerrar sesión</button>
-    </div>
-  </aside>
+  <aside class="admin-sidebar"></aside>
 
   <main class="admin-main">
     <header class="admin-header admin-header--row">
@@ -48,7 +35,7 @@
             <thead>
               <tr>
                 <th>Alumno</th>
-                <th>Email</th>
+                <th>Progreso</th>
                 <th>Estado</th>
                 <th>Cursos</th>
                 <th></th>
@@ -105,6 +92,8 @@
       createStudent,
       saveStudent,
       deleteStudent,
+      getStudentOverallProgress,
+      resetStudentLearningData,
       STATUS_LABELS,
     } from "../js/data.js";
 
@@ -146,28 +135,60 @@
       const students = getStudents();
       tbody.innerHTML = students.length
         ? students
-            .map(
-              (s) => `
-          <tr>
-            <td><strong>${escapeHtml(s.name)}</strong></td>
-            <td>${escapeHtml(s.email)}</td>
+            .map((s) => {
+              const prog = getStudentOverallProgress(s.id);
+              return `
+          <tr class="adm-student-row">
+            <td>
+              <div class="adm-student-cell">
+                <span class="adm-avatar">${s.name.charAt(0)}</span>
+                <div><strong>${escapeHtml(s.name)}</strong><span class="admin-muted">${escapeHtml(s.email)}</span></div>
+              </div>
+            </td>
+            <td class="adm-progress-cell" style="min-width:160px">
+              <span>${prog.percent}%</span>
+              <div class="progress-bar-wrap adm-progress-bar"><div class="progress-bar-fill" style="width:${prog.percent}%"></div></div>
+            </td>
             <td>${badge(s.status)}</td>
-            <td>${escapeHtml(courseNames(s.courseIds) || "—")}</td>
+            <td>${prog.courses} · ${escapeHtml(courseNames(s.courseIds) || "—")}</td>
             <td class="admin-actions">
               <button type="button" class="admin-link-btn" data-edit="${s.id}">Editar</button>
+              <button type="button" class="admin-link-btn" data-reset="${s.id}">Reiniciar</button>
+              <a href="/admin/mensajes" class="admin-link-btn">Mensaje</a>
               <button type="button" class="admin-link-btn admin-link-btn--danger" data-delete="${s.id}">Eliminar</button>
             </td>
-          </tr>`
-            )
+          </tr>`;
+            })
             .join("")
         : `<tr><td colspan="5" class="admin-empty">No hay alumnos registrados.</td></tr>`;
 
       tbody.querySelectorAll("[data-edit]").forEach((btn) =>
         btn.addEventListener("click", () => openEdit(btn.dataset.edit))
       );
+      tbody.querySelectorAll("[data-reset]").forEach((btn) =>
+        btn.addEventListener("click", () => resetStudent(btn.dataset.reset))
+      );
       tbody.querySelectorAll("[data-delete]").forEach((btn) =>
         btn.addEventListener("click", () => removeStudent(btn.dataset.delete))
       );
+    }
+
+    function resetStudent(id) {
+      const student = getStudent(id);
+      if (!student) return;
+      if (
+        !confirmAction(
+          `¿Reiniciar progreso, tareas y entregas de «${student.name}»? El alumno volverá a empezar el curso desde cero.`
+        )
+      ) {
+        return;
+      }
+      if (resetStudentLearningData(id)) {
+        showToast(`Progreso de ${student.name} reiniciado. Recarga el campus del alumno (Ctrl+F5).`);
+        renderStudents();
+      } else {
+        showToast("No se pudo reiniciar el alumno.", "error");
+      }
     }
 
     function getSelectedCourses() {

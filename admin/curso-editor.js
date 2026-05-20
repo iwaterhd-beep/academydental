@@ -22,6 +22,7 @@ import {
 } from "../js/data.js";
 import { BLOCK_TOOLBAR, buildBlockEditor } from "./editor/blocks.js";
 import { renderCoursePreview, renderLessonPreview, renderActivityPreview, renderExamPreview, escapeHtml } from "./editor/preview.js";
+import { bindThemeToggle } from "../js/theme.js";
 
 if (!requireAdmin()) throw new Error("unauthorized");
 
@@ -629,6 +630,13 @@ function renderTaskPanel() {
         <label class="editor-field"><span class="editor-label">Nota mínima test (%)</span>
           <input class="editor-input" id="aPass" type="number" value="${a.passScore ?? 60}" /></label>
       </div>
+      <div class="builder-toggle-row" style="margin-top:16px">
+        <label><input type="checkbox" id="aAllowFiles" ${a.allowFiles !== false ? "checked" : ""} /> Permitir subida de archivos (imagen, vídeo, PDF…)</label>
+      </div>
+      <label class="editor-field editor-field--full" id="aFileTypesWrap" style="${a.allowFiles !== false ? "" : "display:none"}">
+        <span class="editor-label">Tipos permitidos (separados por coma, vacío = todos)</span>
+        <input class="editor-input" id="aFileTypes" value="${escapeHtml((a.fileTypes || []).join(", "))}" placeholder="pdf, jpg, png, mp4, stl" />
+      </label>
       <p class="login-kicker" style="margin:20px 0 10px">Preguntas para el alumno</p>
       <div id="aQuestions"></div>
       <div style="display:flex;gap:8px;margin-top:12px">
@@ -640,6 +648,15 @@ function renderTaskPanel() {
     form.querySelector("#aDue").onchange = (e) => { a.dueDate = e.target.value; markDirty(); };
     form.querySelector("#aScore").oninput = (e) => { a.maxScore = Number(e.target.value); markDirty(); };
     form.querySelector("#aPass").oninput = (e) => { a.passScore = Number(e.target.value); markDirty(); };
+    form.querySelector("#aAllowFiles").onchange = (e) => {
+      a.allowFiles = e.target.checked;
+      form.querySelector("#aFileTypesWrap").style.display = a.allowFiles ? "" : "none";
+      markDirty();
+    };
+    form.querySelector("#aFileTypes").oninput = (e) => {
+      a.fileTypes = e.target.value.split(",").map((t) => t.trim()).filter(Boolean);
+      markDirty();
+    };
 
     if (!a.questions) a.questions = [];
 
@@ -737,7 +754,10 @@ function renderQuizQuestionsForm(form, q, onUpdate) {
         <input class="editor-input" id="qPass" type="number" value="${q.passScore}" /></label>
     </div>
     <div id="questionsList"></div>
-    <button type="button" class="admin-btn admin-btn--ghost" id="addQuestion">+ Pregunta</button>`;
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button type="button" class="admin-btn admin-btn--ghost" id="addQuestion">+ Pregunta test</button>
+      <button type="button" class="admin-btn admin-btn--ghost" id="addTextQuestion">+ Texto libre</button>
+    </div>`;
 
   form.querySelector("#qTitle").oninput = (e) => { q.title = e.target.value; onUpdate(); };
   form.querySelector("#qTime").oninput = (e) => { q.timeLimitMin = Number(e.target.value); onUpdate(); };
@@ -745,25 +765,63 @@ function renderQuizQuestionsForm(form, q, onUpdate) {
   form.querySelector("#qPass").oninput = (e) => { q.passScore = Number(e.target.value); onUpdate(); };
 
   const qList = form.querySelector("#questionsList");
-  qList.innerHTML = q.questions.map((question, qi) => `
+  const renderQuestionCards = () => {
+    qList.innerHTML = q.questions.map((question, qi) => `
     <div class="quiz-question-card">
       <input class="editor-input" data-q-text="${qi}" value="${escapeHtml(question.text)}" placeholder="Pregunta" />
-      <select data-q-type="${qi}"><option value="single" ${question.type === "single" ? "selected" : ""}>Opción única</option><option value="multi" ${question.type === "multi" ? "selected" : ""}>Múltiple</option><option value="bool" ${question.type === "bool" ? "selected" : ""}>V/F</option></select>
-      <div class="quiz-options">${(question.options || []).map((opt, oi) => `<input class="editor-input" data-q-opt="${qi}:${oi}" value="${escapeHtml(opt)}" />`).join("")}</div>
+      <select data-q-type="${qi}">
+        <option value="single" ${question.type === "single" ? "selected" : ""}>Opción única</option>
+        <option value="multi" ${question.type === "multi" ? "selected" : ""}>Múltiple</option>
+        <option value="bool" ${question.type === "bool" ? "selected" : ""}>V/F</option>
+        <option value="text" ${question.type === "text" ? "selected" : ""}>Texto libre (corrección manual)</option>
+      </select>
+      <input class="editor-input" data-q-pts="${qi}" type="number" value="${question.points || 10}" placeholder="Puntos" style="max-width:100px;margin-top:8px" />
+      ${question.type !== "text" ? `<div class="quiz-options">${(question.options || []).map((opt, oi) => `<input class="editor-input" data-q-opt="${qi}:${oi}" value="${escapeHtml(opt)}" />`).join("")}</div>` : `<p class="admin-muted" style="margin:8px 0">Corrección manual por el profesor.</p>`}
       <button type="button" class="admin-link-btn admin-link-btn--danger" data-rm-q="${qi}">Eliminar</button>
     </div>`).join("");
 
-  qList.querySelectorAll("[data-q-text]").forEach((el) => {
-    el.oninput = () => { q.questions[el.dataset.qText].text = el.value; onUpdate(); };
-  });
-  qList.querySelectorAll("[data-rm-q]").forEach((btn) => {
-    btn.onclick = () => { q.questions.splice(Number(btn.dataset.rmQ), 1); onUpdate(); renderQuizQuestionsForm(form, q, onUpdate); };
-  });
+    qList.querySelectorAll("[data-q-text]").forEach((el) => {
+      el.oninput = () => { q.questions[el.dataset.qText].text = el.value; onUpdate(); };
+    });
+    qList.querySelectorAll("[data-q-pts]").forEach((el) => {
+      el.oninput = () => { q.questions[el.dataset.qPts].points = Number(el.value); onUpdate(); };
+    });
+    qList.querySelectorAll("[data-q-type]").forEach((el) => {
+      el.onchange = () => {
+        const question = q.questions[el.dataset.qType];
+        question.type = el.value;
+        if (question.type === "text") {
+          question.options = [];
+        } else if (!question.options?.length) {
+          question.options = question.type === "bool" ? ["Verdadero", "Falso"] : ["A", "B", "C"];
+        }
+        onUpdate();
+        renderQuestionCards();
+      };
+    });
+    qList.querySelectorAll("[data-q-opt]").forEach((el) => {
+      el.oninput = () => {
+        const [qi, oi] = el.dataset.qOpt.split(":");
+        q.questions[qi].options[oi] = el.value;
+        onUpdate();
+      };
+    });
+    qList.querySelectorAll("[data-rm-q]").forEach((btn) => {
+      btn.onclick = () => { q.questions.splice(Number(btn.dataset.rmQ), 1); onUpdate(); renderQuestionCards(); };
+    });
+  };
+  renderQuestionCards();
+
   form.querySelector("#addQuestion").onclick = () => {
     q.questions.push({ id: uid("q"), type: "single", text: "Nueva pregunta", options: ["A", "B", "C"], correct: 0, points: 10 });
     onUpdate();
-    renderQuizQuestionsForm(form, q, onUpdate);
+    renderQuestionCards();
   };
+  form.querySelector("#addTextQuestion")?.addEventListener("click", () => {
+    q.questions.push({ id: uid("q"), type: "text", text: "Nueva pregunta abierta", points: 10, options: [], correct: 0 });
+    onUpdate();
+    renderQuestionCards();
+  });
 }
 
 function renderQuizPanel() {
@@ -930,3 +988,4 @@ window.addEventListener("beforeunload", (e) => {
 });
 
 renderAll();
+bindThemeToggle();
