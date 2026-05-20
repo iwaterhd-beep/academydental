@@ -5,6 +5,8 @@ import {
   resetPlatformSettings,
   exportAllData,
   importAllData,
+  restoreDemoSeedData,
+  resetDemoStudent,
   LANGUAGES,
 } from "../js/data.js";
 
@@ -122,10 +124,12 @@ function sectionContent(id) {
             <input type="file" id="importDataInput" accept="application/json,.json" hidden />
           </label>
           <button type="button" class="adm-btn adm-btn--ghost" id="resetSettingsBtn">Restaurar ajustes</button>
+          <button type="button" class="adm-btn adm-btn--ghost" id="restoreDemoBtn">↺ Restaurar curso demo</button>
+          <button type="button" class="adm-btn adm-btn--ghost" id="resetDemoStudentBtn">↺ Reiniciar alumno demo</button>
         </div>
         <div class="adm-danger-zone">
           <p class="adm-setting-label">Zona de riesgo</p>
-          <p class="adm-setting-hint">Restaura la configuración a los valores de fábrica. No elimina cursos ni alumnos.</p>
+          <p class="adm-setting-hint">«Restaurar curso demo» actualiza el curso de muestra. «Reiniciar alumno demo» borra progreso y entregas de cursos@alumno.com.</p>
         </div>`;
     default:
       return "";
@@ -171,6 +175,16 @@ function render() {
   document.getElementById("exportDataBtn")?.addEventListener("click", exportData);
   document.getElementById("importDataInput")?.addEventListener("change", importData);
   document.getElementById("resetSettingsBtn")?.addEventListener("click", resetSettings);
+  document.getElementById("restoreDemoBtn")?.addEventListener("click", () => {
+    if (!confirmAction("¿Restaurar el curso demo y contenido base?")) return;
+    restoreDemoSeedData();
+    showToast("Curso demo restaurado.");
+  });
+  document.getElementById("resetDemoStudentBtn")?.addEventListener("click", () => {
+    if (!confirmAction("¿Reiniciar progreso del alumno demo (cursos@alumno.com)?")) return;
+    if (resetDemoStudent()) showToast("Alumno demo reiniciado.");
+    else showToast("No se pudo reiniciar.", "error");
+  });
 
   document.querySelectorAll(".adm-toggle-input").forEach((input) => {
     input.addEventListener("change", () => input.nextElementSibling?.classList.toggle("is-on", input.checked));

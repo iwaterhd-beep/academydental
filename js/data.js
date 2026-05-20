@@ -950,6 +950,13 @@ export function resetDemoStudent() {
   return resetStudentLearningData("s-demo");
 }
 
+/** Restaura curso demo, alumno y contenido base (mantiene cursos propios). */
+export function restoreDemoSeedData() {
+  const data = loadRaw();
+  saveRaw(ensureSeedData({ ...data }));
+  return true;
+}
+
 function collectStudentIds(data, studentId) {
   const student = data.students?.find((s) => s.id === studentId);
   if (!student) return new Set();
