@@ -36,6 +36,38 @@ Editor visual premium con:
 
 Datos en `localStorage` (preparado para migrar a Supabase).
 
+## Desplegar en Vercel
+
+1. Entra en [vercel.com](https://vercel.com) e inicia sesión con GitHub.
+2. **Add New → Project** e importa el repo `iwaterhd-beep/academydental`.
+3. Deja la configuración por defecto:
+   - **Framework Preset:** Other
+   - **Build Command:** `npm run build` (o vacío)
+   - **Output Directory:** `.` (raíz del proyecto)
+   - **Install Command:** `npm install`
+4. Pulsa **Deploy**.
+
+La app es estática (HTML/CSS/JS). No hace falta base de datos en Vercel: los datos de demo viven en el `localStorage` de cada navegador.
+
+### URLs en producción
+
+| Ruta | Uso |
+|------|-----|
+| `/` | Login |
+| `/admin/` | Panel admin |
+| `/campus/` | Campus alumno |
+
+### Credenciales demo
+
+| Rol | Email | Contraseña |
+|-----|-------|------------|
+| Admin | `cursos@admin.com` | `9999` |
+| Alumno | `cursos@alumno.com` | `9999` |
+
+### Reset alumno demo en producción
+
+Abre `https://tu-dominio.vercel.app/?resetDemo=1` y vuelve a iniciar sesión como alumno.
+
 ## Panel admin
 
 | Sección | Función |
